@@ -44,13 +44,9 @@ router.get('/public/config', (req, res) => {
 
 // Téléchargement du setup desktop
 router.get('/public/download', (req, res) => {
-  const fs = require('fs');
-  const p = require('path');
-  const dir = process.env.MYBOGO_DOWNLOAD_DIR || p.join(__dirname, '../../public/downloads');
-  const files = fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.exe')) : [];
-  if (!files.length) return res.status(404).json({ message: 'Aucun fichier téléchargeable disponible.' });
-  files.sort().reverse(); // version la plus récente en premier
-  res.download(p.join(dir, files[0]));
+  const url = process.env.DOWNLOAD_URL;
+  if (!url) return res.status(404).json({ message: 'Aucun fichier téléchargeable disponible.' });
+  res.redirect(url);
 });
 
 // Abonnements (public — inscription & paiement Wave)
