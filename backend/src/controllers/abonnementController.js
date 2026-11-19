@@ -24,7 +24,7 @@ function initierAbonnement(req, res) {
     VALUES (?, ?, ?, 'en_attente', ?, ?, ?, datetime('now'))
   `).run(slug, plan, planData.prix, nomBoutique, email, motDePasse);
 
-  const waveNumero = process.env.WAVE_NUMERO || '0700000000';
+  const waveNumero = process.env.WAVE_NUMERO || '0504079131';
   res.json({
     abonnement_id: result.lastInsertRowid,
     slug,
