@@ -1,0 +1,12 @@
+{
+  "name": "MYBOGO-STOCK",
+  "short_name": "MYBOGO",
+  "description": "Gestion commerciale et stock",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e40af",
+  "theme_color": "#1e40af",
+  "icons": [
+    { "src": "/logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

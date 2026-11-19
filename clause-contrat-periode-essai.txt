@@ -1,0 +1,98 @@
+CLAUSE — PÉRIODE D'ESSAI ET MODIFICATIONS
+(MYBOGO-STOCK — à intégrer au contrat ou accord de livraison avec le client)
+
+────────────────────────────────────────
+
+ARTICLE 1 — PÉRIODE D'ESSAI (30 JOURS)
+
+À compter de la première installation, le Client bénéficie d'une période d'essai
+de trente (30) jours calendaires.
+
+Pendant cette période, sont inclus sans frais supplémentaires :
+  • Toute correction d'anomalie ou de dysfonctionnement constaté,
+  • Tout ajustement demandé sur les fonctionnalités déjà livrées,
+  • Tout complément de fonctionnalité raisonnable, directement lié à l'usage
+    prévu du logiciel (gestion de stock, caisse, facturation, clients,
+    fournisseurs, rapports).
+
+Cette période sert à ce que le Client puisse tester le logiciel dans les
+conditions réelles de son activité et faire remonter toute observation.
+
+────────────────────────────────────────
+
+ARTICLE 2 — FIN DE LA PÉRIODE D'ESSAI ET ACCEPTATION
+
+À l'issue des 30 jours, si le Client n'a soulevé aucune réserve, ou que
+toutes les observations transmises ont été traitées à sa satisfaction,
+le logiciel est considéré comme accepté dans l'état où il se trouve.
+
+Un document récapitulatif — la « Liste des fonctionnalités livrées »
+(voir Annexe) — est établi à ce moment-là et vaut référence pour la suite.
+Elle liste précisément ce qui a été livré et validé.
+
+────────────────────────────────────────
+
+ARTICLE 3 — DEMANDES APRÈS LA PÉRIODE D'ESSAI
+
+Passé ce délai de 30 jours et l'acceptation mentionnée à l'Article 2,
+toute nouvelle demande du Client qui ne figure PAS dans la Liste des
+fonctionnalités livrées — qu'il s'agisse d'un ajout, d'une correction,
+ou d'un complément de fonctionnalité — est considérée comme une prestation
+nouvelle, distincte de la livraison initiale.
+
+Elle fera l'objet :
+  • d'un devis préalable communiqué au Client avant toute intervention,
+  • d'une facturation correspondant au travail demandé,
+  • d'un délai de réalisation convenu entre les parties.
+
+Aucune intervention hors Liste ne sera effectuée sans accord préalable
+du Client sur le devis proposé.
+
+────────────────────────────────────────
+
+ARTICLE 4 — RESPONSABILITÉ EN CAS DE MODIFICATION DEMANDÉE PAR LE CLIENT
+
+Certaines protections intégrées au logiciel (contrôles de cohérence,
+blocages de sécurité sur les données) existent pour garantir l'exactitude
+des informations de gestion du Client (stock, ventes, achats, marges).
+
+Si le Client demande expressément la suppression ou la désactivation
+d'une telle protection, malgré les explications et mises en garde
+communiquées au préalable, cette demande sera exécutée uniquement sur
+confirmation écrite du Client.
+
+Dans ce cas, le Client reconnaît en assumer seul les conséquences
+éventuelles sur l'exactitude de ses données (stock, marges, historiques),
+le prestataire ne pouvant être tenu responsable des écarts résultant
+d'une protection retirée à la demande expresse du Client.
+
+────────────────────────────────────────
+
+ANNEXE — LISTE DES FONCTIONNALITÉS LIVRÉES
+(à compléter et joindre à la fin de la période d'essai)
+
+  ☐ Gestion des produits (formats carton/½/¼, prix indépendants)
+  ☐ Achats fournisseurs (historique, marge par article)
+  ☐ Caisse / vente (comptant, crédit, multi-tickets)
+  ☐ Clôture de caisse (ouverture, arrêté, correction, suppression)
+  ☐ Facturation (facture, proforma, avoir, reçu)
+  ☐ Clients & crédit (débiteurs, règlements, historique)
+  ☐ Fournisseurs
+  ☐ Stock (valeur, coût des ventes, marge, alertes)
+  ☐ Rapports (ventes, marge, remises, bénéfices)
+  ☐ Utilisateurs & rôles
+  ☐ Sauvegarde (automatique, manuelle, restauration)
+  ☐ Paramètres (infos entreprise, logo)
+  ☐ Licence
+  ☐ Autre : ______________________
+
+Date d'acceptation : __________________
+Signature Client : __________________
+Signature Prestataire : __________________
+
+────────────────────────────────────────
+
+Note : ce document est un modèle pratique, pas un texte rédigé par un juriste.
+Pour une valeur juridique pleinement opposable, faites-le relire par un
+professionnel du droit avant signature, surtout si les montants en jeu
+sont importants.

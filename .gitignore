@@ -1,0 +1,9 @@
+node_modules/
+frontend/dist/
+backend/.env
+backend/database/*.db
+backend/database/*.lock
+backend/database/tenants/
+uploads/
+*.log
+backend/public/downloads/*.exe

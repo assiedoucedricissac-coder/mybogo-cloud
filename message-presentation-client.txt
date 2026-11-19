@@ -1,0 +1,35 @@
+Bonjour,
+
+Je vous présente MYBOGO-STOCK, notre logiciel de gestion commerciale conçu pour les commerces et boutiques. Il fonctionne directement sur votre ordinateur, sans connexion internet obligatoire, avec vos données stockées chez vous en toute sécurité.
+
+Voici ce qu'il couvre :
+
+🛒 CAISSE
+Encaissement rapide de vos ventes, gestion des tickets, plusieurs modes de paiement (espèces, mobile money, carte...), vente au détail comme au carton.
+
+📦 STOCK & PRODUITS
+Suivi en temps réel de vos quantités, alertes en cas de rupture ou de stock faible, gestion par carton/demi-carton/quart, plusieurs formats par produit.
+
+🧾 FACTURATION
+Factures, proformas, avoirs et reçus générés automatiquement et imprimés sur ticket, conformes pour vos clients professionnels.
+
+👥 CLIENTS & CRÉDIT
+Suivi des ventes à crédit, historique complet, encaissement progressif des dettes, reprise possible de vos anciennes créances.
+
+🚚 FOURNISSEURS & ACHATS
+Enregistrement de vos achats, suivi des règlements fournisseurs, calcul automatique de votre coût réel.
+
+📊 RAPPORTS
+Chiffre d'affaires, marge réelle, produits qui se vendent le mieux, remises accordées — tout en un coup d'œil pour piloter votre activité.
+
+🔐 SÉCURITÉ & FIABILITÉ
+Sauvegardes automatiques régulières, comptes utilisateurs avec droits différents (gérant, caissier), licence dédiée à votre poste.
+
+Le logiciel s'adapte à votre activité : certaines fonctionnalités peuvent être activées ou désactivées selon vos besoins réels, pour rester simple à utiliser au quotidien.
+
+Je reste disponible pour une démonstration et pour discuter des modalités adaptées à votre commerce.
+
+Cordialement,
+[Votre nom]
+MYBOGO-STOCK
+[Votre contact]

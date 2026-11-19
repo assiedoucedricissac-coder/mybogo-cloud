@@ -1,0 +1,38 @@
+MYBOGO-STOCK — Résumé des mises à jour
+========================================
+
+CAISSE / VENTE
+- Scanner de code-barres fiabilisé (correction d'un bug clavier AZERTY qui rendait certains scans illisibles)
+- Modification du prix et de la remise autorisée pour tous les comptes utilisateurs
+- Vente Mélange : tailles de carton 6, 12, 24 et 48 disponibles
+- Tickets de caisse réimprimés : texte lisible, ne coupe plus sur le bord du papier
+- Nouveau : possibilité de créer une facture (ou proforma/avoir/reçu) directement depuis la Caisse, avec client, sans obligatoirement faire une vente — imprimée en ticket thermique
+- Arrêté de caisse : date et heure modifiables (utile en cas de clôture le lendemain)
+
+FACTURATION
+- Brouillons modifiables puis émis
+- Date du document modifiable (calendrier)
+- Montants corrigés dans tous les PDF (bug d'affichage résolu)
+- Pied de page des factures : tient maintenant sur une seule page (ne gaspille plus de feuille)
+
+CLIENTS
+- Un versement client impacte désormais directement la ou les factures concernées (les plus anciennes en premier)
+- Reçu imprimable généré automatiquement après chaque versement
+- Nouveau : reprise des dettes antérieures à l'installation du logiciel (montant à saisir, à la création du client ou depuis sa fiche) — ces dettes se règlent normalement comme les autres
+- Points de fidélité retirés
+
+ACHATS
+- Tableau de bord : total achats/ventes/marge, valeur du stock, marge potentielle si tout est vendu
+- Filtres par période (jour/semaine/mois/tout) + période personnalisée
+- Distinction achat payé comptant / à crédit, frais de livraison pris en compte
+- Achats modifiables après coup : fournisseur, paiement, date, articles (ajout ou correction), et suppression si erreur de saisie
+- Nouvelles colonnes : articles achetés (avec quantité selon le format) et marge potentielle
+
+PRODUITS
+- Champ Code-barres ajouté au formulaire (obligatoire pour que le scanner reconnaisse un produit)
+- Fiche produit consultable (code-barres, conditionnement, prix carton)
+
+GÉNÉRAL
+- Toutes les fenêtres peuvent être déplacées à la souris (utile pour voir ce qu'il y a derrière)
+- Réinitialisation des données possible avant une nouvelle installation client (avec sauvegarde de sécurité automatique)
+- Sauvegarde et restauration de la base de données
