@@ -961,6 +961,7 @@ function initDatabase() {
       date_fin TEXT,
       statut TEXT NOT NULL DEFAULT 'en_attente',
       wave_ref TEXT,
+      jeko_payment_id TEXT,
       nom_boutique TEXT,
       email TEXT,
       mdp_temp TEXT,
@@ -971,6 +972,9 @@ function initDatabase() {
       ('trimestriel', 'Trimestriel', 35000, 90),
       ('annuel', 'Annuel', 125000, 365);
   `);
+
+  // Migration : colonne jeko_payment_id
+  try { _rawDb.exec('ALTER TABLE abonnements ADD COLUMN jeko_payment_id TEXT'); } catch(_) {}
 
   const bcrypt = require('bcryptjs');
 

@@ -47,9 +47,9 @@ const FEATURES = [
 ];
 
 const PLANS = [
-  { id: 'mensuel',      label: 'Mensuel',      prix: '5 000',  fcfa: 5000,  periode: 'mois',      badge: null,         color: 'border-gray-200' },
-  { id: 'trimestriel',  label: 'Trimestriel',  prix: '13 500', fcfa: 13500, periode: 'trimestre', badge: 'Populaire',  color: 'border-blue-500 ring-2 ring-blue-500' },
-  { id: 'annuel',       label: 'Annuel',        prix: '50 000', fcfa: 50000, periode: 'an',        badge: 'Meilleur prix', color: 'border-gray-200' },
+  { id: 'mensuel',      label: 'Mensuel',      prix: '12 500',  fcfa: 12500,  periode: 'mois',      badge: null,            color: 'border-gray-200' },
+  { id: 'trimestriel',  label: 'Trimestriel',  prix: '35 000',  fcfa: 35000,  periode: 'trimestre', badge: 'Populaire',     color: 'border-blue-500 ring-2 ring-blue-500' },
+  { id: 'annuel',       label: 'Annuel',        prix: '125 000', fcfa: 125000, periode: 'an',        badge: 'Meilleur prix', color: 'border-gray-200' },
 ];
 
 export default function LandingPage() {

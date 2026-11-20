@@ -24,6 +24,8 @@ import Location from './pages/Location';
 import LandingPage from './pages/LandingPage';
 import Subscribe from './pages/Subscribe';
 import SubscribePending from './pages/SubscribePending';
+import PaiementSuccess from './pages/PaiementSuccess';
+import PaiementError from './pages/PaiementError';
 
 class ErrorBoundary extends React.Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -62,6 +64,8 @@ function AppRoutes() {
       <Route path="/accueil" element={<LandingPage />} />
       <Route path="/subscribe" element={<Subscribe />} />
       <Route path="/subscribe/pending" element={<SubscribePending />} />
+      <Route path="/paiement/success" element={<PaiementSuccess />} />
+      <Route path="/paiement/error" element={<PaiementError />} />
       <Route path="/admin" element={<AdminPanel />} />
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
