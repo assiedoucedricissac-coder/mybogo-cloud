@@ -967,9 +967,9 @@ function initDatabase() {
       created_at TEXT DEFAULT (datetime('now'))
     );
     INSERT OR IGNORE INTO plans_abonnement (code, nom, prix, duree_jours) VALUES
-      ('mensuel', 'Mensuel', 5000, 30),
-      ('trimestriel', 'Trimestriel', 13500, 90),
-      ('annuel', 'Annuel', 50000, 365);
+      ('mensuel', 'Mensuel', 12500, 30),
+      ('trimestriel', 'Trimestriel', 35000, 90),
+      ('annuel', 'Annuel', 125000, 365);
   `);
 
   const bcrypt = require('bcryptjs');
