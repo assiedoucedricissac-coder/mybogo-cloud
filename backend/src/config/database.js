@@ -966,7 +966,7 @@ function initDatabase() {
       mdp_temp TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
-    INSERT OR IGNORE INTO plans_abonnement (code, nom, prix, duree_jours) VALUES
+    INSERT OR REPLACE INTO plans_abonnement (code, nom, prix, duree_jours) VALUES
       ('mensuel', 'Mensuel', 12500, 30),
       ('trimestriel', 'Trimestriel', 35000, 90),
       ('annuel', 'Annuel', 125000, 365);
