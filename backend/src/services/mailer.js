@@ -71,4 +71,21 @@ async function envoyerAcces({ email, nomBoutique, slug, finLicence, essai }) {
   }
 }
 
-module.exports = { envoyerAcces, configure };
+// Pour le bouton de test du panneau d'administration : renvoie la vraie raison d'un échec.
+async function tester(destinataire) {
+  const manquantes = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'].filter(k => !process.env[k]);
+  if (manquantes.length) return { ok: false, message: `Variables absentes sur le serveur : ${manquantes.join(', ')}. Vérifiez les noms et que Railway a bien redéployé.` };
+  try {
+    await getTransport().sendMail({
+      from: process.env.MAIL_FROM || process.env.SMTP_USER,
+      to: destinataire,
+      subject: 'Test MYBOGO-STOCK',
+      text: "Si vous lisez ce message, l'envoi d'e-mails de MYBOGO-STOCK fonctionne.",
+    });
+    return { ok: true, message: `E-mail de test envoyé à ${destinataire}.` };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+}
+
+module.exports = { envoyerAcces, configure, tester };

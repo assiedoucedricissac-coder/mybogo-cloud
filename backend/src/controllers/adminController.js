@@ -128,4 +128,10 @@ function reinitialiserMotDePasse(req, res) {
   res.json({ slug: b.tenant.slug, email: b.tenant.email });
 }
 
-module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse };
+async function testerEmail(req, res) {
+  const { email } = req.body;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, message: 'Adresse e-mail invalide.' });
+  res.json(await require('../services/mailer').tester(email));
+}
+
+module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail };

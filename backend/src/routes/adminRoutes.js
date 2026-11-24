@@ -9,6 +9,7 @@ router.post('/boutiques', adminAuth, adminController.creer);
 router.post('/boutiques/:slug/prolonger', adminAuth, adminController.prolonger);
 router.post('/boutiques/:slug/suspendre', adminAuth, adminController.suspendre);
 router.post('/boutiques/:slug/reactiver', adminAuth, adminController.reactiver);
+router.post('/test-email', adminAuth, adminController.testerEmail);
 router.post('/boutiques/:slug/mot-de-passe', adminAuth, adminController.reinitialiserMotDePasse);
 
 module.exports = router;

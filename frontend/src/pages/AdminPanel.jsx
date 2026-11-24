@@ -146,6 +146,18 @@ export default function AdminPanel() {
   const [form, setForm] = useState({ slug: '', nomBoutique: '', email: '', motDePasse: '', dureeJours: '15' });
   const [creation, setCreation] = useState(false);
   const [dernierResultat, setDernierResultat] = useState(null);
+  const [testMail, setTestMail] = useState({ email: '', busy: false, resultat: null });
+
+  async function tester(e) {
+    e.preventDefault();
+    setTestMail(t => ({ ...t, busy: true, resultat: null }));
+    try {
+      const r = await adminApi.post('/test-email', { email: testMail.email });
+      setTestMail(t => ({ ...t, busy: false, resultat: r.data }));
+    } catch (err) {
+      setTestMail(t => ({ ...t, busy: false, resultat: { ok: false, message: err.response?.data?.message || 'Test impossible.' } }));
+    }
+  }
 
   useEffect(() => { if (token) charger(); }, [token]);
 
@@ -291,6 +303,18 @@ export default function AdminPanel() {
               <p style={{ margin: '2px 0', fontSize: 13 }}>Code boutique : <code style={{ color: '#60a5fa', fontWeight: 700 }}>{dernierResultat.slug}</code></p>
               <p style={{ margin: '2px 0', fontSize: 13 }}>Email : <code>{dernierResultat.email}</code></p>
             </div>
+          )}
+        </div>
+
+        <div style={{ ...S.card, marginBottom: 16 }}>
+          <h2 style={{ fontSize: 15, margin: '0 0 10px' }}>Tester l'envoi d'e-mails</h2>
+          <form onSubmit={tester} style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input style={{ ...S.input, flex: '1 1 220px', width: 'auto' }} type="email" placeholder="Votre adresse e-mail de test" value={testMail.email}
+              onChange={e => setTestMail(t => ({ ...t, email: e.target.value }))} required />
+            <button style={S.btn} type="submit" disabled={testMail.busy}>{testMail.busy ? 'Envoi…' : 'Envoyer un test'}</button>
+          </form>
+          {testMail.resultat && (
+            <p style={{ margin: '10px 0 0', fontSize: 13, color: testMail.resultat.ok ? '#4ade80' : '#fca5a5', wordBreak: 'break-word' }}>{testMail.resultat.message}</p>
           )}
         </div>
 
