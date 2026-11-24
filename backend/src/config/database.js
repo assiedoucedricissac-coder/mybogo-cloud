@@ -1033,4 +1033,9 @@ function tenantDbWrapped(slug, tenantDbPath) {
   };
 }
 
-module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase, tenantDbWrapped };
+function currentTenantSlug() {
+  const store = tenantContext.getStore();
+  return store && store.slug ? store.slug : null;
+}
+
+module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase, tenantDbWrapped, currentTenantSlug };

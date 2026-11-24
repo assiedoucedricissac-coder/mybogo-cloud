@@ -9,6 +9,7 @@ export default function PaiementSuccess() {
   const ref = searchParams.get('ref') || '';
   const [statut, setStatut] = useState('loading'); // loading | actif | pending
   const [boutique, setBoutique] = useState(null);
+  const connecte = (() => { try { return !!localStorage.getItem('token'); } catch { return false; } })();
 
   useEffect(() => {
     if (!ref) { setStatut('pending'); return; }
@@ -52,15 +53,17 @@ export default function PaiementSuccess() {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={32} className="text-green-600" />
             </div>
-            <h2 className="text-2xl font-black text-gray-900 mb-2">Boutique activée !</h2>
+            <h2 className="text-2xl font-black text-gray-900 mb-2">{connecte ? 'Abonnement activé !' : 'Boutique activée !'}</h2>
             <p className="text-gray-500 text-sm mb-6">
-              Votre espace <strong>{boutique.nom_boutique}</strong> est prêt. Connectez-vous avec votre email.
+              {connecte
+                ? <>Merci ! L'accès de <strong>{boutique.nom_boutique}</strong> est prolongé.</>
+                : <>Votre espace <strong>{boutique.nom_boutique}</strong> est prêt. Connectez-vous avec votre email.</>}
             </p>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => (connecte ? (window.location.href = '/') : navigate('/login'))}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow"
             >
-              Se connecter maintenant
+              {connecte ? "Retourner à l'application" : 'Se connecter maintenant'}
             </button>
           </>
         )}

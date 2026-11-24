@@ -1,4 +1,4 @@
-const { mainDb } = require('../config/database');
+const { mainDb, tenantDbWrapped, currentTenantSlug } = require('../config/database');
 const { provisionnerBoutique } = require('../services/provisionnement');
 const { creerPaiement, verifierSignature } = require('../services/jeko');
 const { envoyerAcces } = require('../services/mailer');
@@ -164,20 +164,82 @@ async function webhookJeko(req, res) {
   if (!abo) return res.json({ received: true, note: 'Abonnement introuvable ou déjà activé' });
 
   const planData = mainDb.prepare('SELECT * FROM plans_abonnement WHERE code=?').get(abo.plan);
-  const dateDebut = new Date().toISOString();
-  const dateFin = new Date(Date.now() + planData.duree_jours * 86400000).toISOString();
-
   try {
-    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
-    mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
-      .run(dateDebut, dateFin, reference, abo.id);
-    console.log(`[Jèko] Boutique activée: ${abo.slug}`);
-    envoyerAcces({ email: abo.email, nomBoutique: abo.nom_boutique, slug: abo.slug, finLicence: dateFin, essai: false });
+    activerAbonnement(abo, planData, reference);
+    console.log(`[Jèko] Abonnement activé: ${abo.slug}`);
   } catch (err) {
-    console.error('[Jèko] Erreur provisionnement:', err.message);
+    // 500 : Jèko réessaie l'envoi, le client a déjà payé.
+    console.error('[Jèko] Erreur activation:', err.message);
+    return res.status(500).json({ message: 'Activation échouée, nouvelle tentative attendue.' });
   }
 
   res.json({ received: true });
+}
+
+// Boutique inexistante : création (premier abonnement). Boutique existante : prolongation de
+// sa licence à partir de la fin actuelle (ou d'aujourd'hui si elle est déjà expirée).
+function activerAbonnement(abo, planData, reference) {
+  const dateDebut = new Date().toISOString();
+  const boutique = tenantRegistry.lister().find(t => t.slug === abo.slug);
+  let dateFin;
+
+  if (boutique) {
+    const tdb = tenantDbWrapped(boutique.slug, boutique.dbPath);
+    const lic = tdb.prepare('SELECT type, expires_at FROM licence WHERE id = 1').get();
+    const aujourdhui = dateDebut.slice(0, 10);
+    const base = lic && lic.type !== 'suspended' && lic.expires_at > aujourdhui ? lic.expires_at : aujourdhui;
+    const fin = new Date(base + 'T00:00:00Z');
+    fin.setUTCDate(fin.getUTCDate() + planData.duree_jours);
+    tdb.prepare(`
+      INSERT INTO licence (id, type, expires_at, activated_at) VALUES (1, 'full', ?, date('now'))
+      ON CONFLICT(id) DO UPDATE SET type='full', expires_at=excluded.expires_at, activated_at=date('now')
+    `).run(fin.toISOString().slice(0, 10));
+    dateFin = fin.toISOString();
+  } else {
+    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
+    dateFin = new Date(Date.now() + planData.duree_jours * 86400000).toISOString();
+  }
+
+  mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
+    .run(dateDebut, dateFin, reference, abo.id);
+  envoyerAcces({ email: abo.email, nomBoutique: abo.nom_boutique, slug: abo.slug, finLicence: dateFin, essai: false });
+  return dateFin;
+}
+
+// Paiement d'un abonnement par une boutique existante (essai terminé ou licence expirée).
+async function renouvelerLicence(req, res) {
+  const slug = currentTenantSlug();
+  const boutique = slug && tenantRegistry.lister().find(t => t.slug === slug);
+  if (!boutique) return res.status(400).json({ message: 'Renouvellement disponible depuis votre boutique en ligne (avec son code boutique).' });
+
+  const planData = mainDb.prepare('SELECT * FROM plans_abonnement WHERE code=? AND actif=1').get(req.body.plan);
+  if (!planData) return res.status(400).json({ message: 'Formule invalide.' });
+  if (!(process.env.JEKO_API_KEY && process.env.JEKO_API_KEY_ID && process.env.JEKO_STORE_ID))
+    return res.status(503).json({ message: 'Le paiement en ligne est momentanément indisponible. Contactez le support.' });
+
+  const result = mainDb.prepare(`
+    INSERT INTO abonnements (slug, plan, montant, statut, nom_boutique, email, created_at)
+    VALUES (?, ?, ?, 'en_attente', ?, ?, datetime('now'))
+  `).run(slug, planData.code, planData.prix, boutique.nom, boutique.email);
+  const aboId = result.lastInsertRowid;
+  const reference = `MYBOGO-${slug}-${aboId}`;
+  const appUrl = process.env.APP_URL || 'https://mybogo-cloud-production.up.railway.app';
+
+  try {
+    const paiement = await creerPaiement({
+      montant: planData.prix,
+      reference,
+      successUrl: `${appUrl}/paiement/success?ref=${reference}`,
+      errorUrl: `${appUrl}/paiement/error?ref=${reference}`,
+      methode: req.body.methode || 'wave',
+    });
+    mainDb.prepare('UPDATE abonnements SET jeko_payment_id=? WHERE id=?').run(paiement.id, aboId);
+    res.json({ redirect_url: paiement.redirectUrl });
+  } catch (err) {
+    console.error('[Jèko] Erreur création paiement (renouvellement):', err.message);
+    mainDb.prepare("UPDATE abonnements SET statut='echec' WHERE id=?").run(aboId);
+    res.status(502).json({ message: "Impossible de lancer le paiement. Réessayez dans un instant." });
+  }
 }
 
 function confirmerPaiement(req, res) {
@@ -186,15 +248,9 @@ function confirmerPaiement(req, res) {
   if (!abo) return res.status(404).json({ message: 'Abonnement non trouvé ou déjà traité.' });
 
   const planData = mainDb.prepare('SELECT * FROM plans_abonnement WHERE code=?').get(abo.plan);
-  const dateDebut = new Date().toISOString();
-  const dateFin = new Date(Date.now() + planData.duree_jours * 86400000).toISOString();
-
   try {
-    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
-    mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
-      .run(dateDebut, dateFin, wave_ref || 'MANUEL', abonnement_id);
-    envoyerAcces({ email: abo.email, nomBoutique: abo.nom_boutique, slug: abo.slug, finLicence: dateFin, essai: false });
-    res.json({ message: 'Boutique créée avec succès.', slug: abo.slug, email: abo.email, date_fin: dateFin });
+    const dateFin = activerAbonnement(abo, planData, wave_ref || 'MANUEL');
+    res.json({ message: 'Abonnement activé avec succès.', slug: abo.slug, email: abo.email, date_fin: dateFin });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -217,4 +273,4 @@ function listerAbonnements(req, res) {
   res.json(abos);
 }
 
-module.exports = { getPlans, initierAbonnement, demarrerEssai, webhookJeko, confirmerPaiement, statutPaiement, listerAbonnements };
+module.exports = { getPlans, initierAbonnement, demarrerEssai, renouvelerLicence, webhookJeko, confirmerPaiement, statutPaiement, listerAbonnements };

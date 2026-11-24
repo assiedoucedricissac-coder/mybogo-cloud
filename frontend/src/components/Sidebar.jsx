@@ -26,7 +26,7 @@ const nav = [
   { to: '/super-admin', icon: Shield,          label: 'Super Admin',       roles: ['super_admin'] },
 ];
 
-export default function Sidebar({ licenceDaysLeft, licenceExpired, licenceType, mobileOpen, onCloseMobile }) {
+export default function Sidebar({ licenceDaysLeft, licenceExpired, licenceType, onSubscribe, mobileOpen, onCloseMobile }) {
   const { user } = useAuth();
   const [societe, setSociete] = useState({ nom: '', slogan: '' });
 
@@ -36,7 +36,7 @@ export default function Sidebar({ licenceDaysLeft, licenceExpired, licenceType, 
 
   const on = k => societe[k] !== 0; // un flag à 0 = désactivé, null/undefined/1 = actif
 
-  const showTrialWarning = !licenceExpired && licenceType === 'trial' && licenceDaysLeft != null && licenceDaysLeft <= 10;
+  const showTrialWarning = !licenceExpired && licenceType === 'trial' && licenceDaysLeft != null && licenceDaysLeft <= 15;
 
   const nomApp    = societe.nom    || 'Gestion Stock';
   const sloganApp = societe.slogan || 'Solution commerciale';
@@ -131,6 +131,11 @@ export default function Sidebar({ licenceDaysLeft, licenceExpired, licenceType, 
       {showTrialWarning && (
         <div className={`mx-2 mb-2 rounded-xl px-3 py-2 text-xs font-medium ${licenceDaysLeft <= 3 ? 'bg-red-500/20 text-red-200 border border-red-400/30' : 'bg-amber-500/20 text-amber-200 border border-amber-400/30'}`}>
           ⚠️ Évaluation : {licenceDaysLeft} jour{licenceDaysLeft > 1 ? 's' : ''} restant{licenceDaysLeft > 1 ? 's' : ''}
+          {onSubscribe && (
+            <button onClick={onSubscribe} className="mt-2 w-full rounded-lg bg-white/20 hover:bg-white/30 py-1.5 font-semibold transition-colors">
+              S'abonner maintenant
+            </button>
+          )}
         </div>
       )}
 

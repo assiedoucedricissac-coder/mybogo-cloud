@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { Key, AlertTriangle, LogOut } from 'lucide-react';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import RenouvellementPanel from './RenouvellementPanel';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -14,6 +15,8 @@ export default function Layout() {
   const [licKey, setLicKey]       = useState('');
   const [activating, setActivating] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showRenew, setShowRenew] = useState(false);
+  const [showKey, setShowKey] = useState(false);
 
   useEffect(() => {
     api.get('/licence/status').then(r => setLicence(r.data)).catch(() => {});
@@ -45,6 +48,7 @@ export default function Layout() {
   return (
     <div className="flex h-screen overflow-hidden" style={{ background:'#f0f4f8' }}>
       <Sidebar licenceDaysLeft={licence?.days_left} licenceExpired={expired} licenceType={licence?.type}
+        onSubscribe={canActivate ? () => setShowRenew(true) : undefined}
         mobileOpen={mobileMenuOpen} onCloseMobile={() => setMobileMenuOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Navbar onMenuClick={() => setMobileMenuOpen(true)} />
@@ -52,6 +56,17 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Abonnement depuis l'alerte d'essai */}
+      {showRenew && !expired && (
+        <div className="fixed inset-0 z-[9998] bg-gray-900/70 flex items-center justify-center p-4" onClick={() => setShowRenew(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 space-y-4" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold text-gray-900 text-center">S'abonner à MYBOGO-STOCK</h2>
+            <RenouvellementPanel />
+            <button onClick={() => setShowRenew(false)} className="w-full text-sm text-gray-400 hover:text-gray-600 transition">Plus tard</button>
+          </div>
+        </div>
+      )}
 
       {/* Écran de blocage si licence expirée */}
       {expired && (
@@ -65,12 +80,19 @@ export default function Layout() {
               <p className="text-gray-500 mt-2 text-sm">
                 La période d'utilisation de ce logiciel est terminée.
                 {canActivate
-                  ? ' Entrez une clé de licence pour continuer.'
+                  ? ' Abonnez-vous pour continuer : vos données sont conservées.'
                   : ' Veuillez contacter votre administrateur pour renouveler la licence.'}
               </p>
             </div>
 
-            {canActivate ? (
+            {canActivate && <RenouvellementPanel />}
+            {canActivate && !showKey && (
+              <button onClick={() => setShowKey(true)} className="text-xs text-gray-400 hover:text-gray-600 underline transition">
+                J'ai une clé de licence
+              </button>
+            )}
+
+            {canActivate && showKey ? (
               <form onSubmit={handleActivate} className="text-left space-y-3">
                 <label className="block text-sm font-medium text-gray-700">Clé de licence</label>
                 <textarea
@@ -89,11 +111,11 @@ export default function Layout() {
                   <Key size={16}/> {activating ? 'Activation…' : 'Activer la licence'}
                 </button>
               </form>
-            ) : (
+            ) : !canActivate ? (
               <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
                 Contactez le fournisseur du logiciel pour obtenir une clé de renouvellement.
               </div>
-            )}
+            ) : null}
 
             <button
               onClick={handleLogout}

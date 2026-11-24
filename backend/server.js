@@ -120,6 +120,7 @@ function startServer() {
   return new Promise((resolve, reject) => {
     try {
       initDatabase();
+      require('./src/services/comptesParDefaut').securiserComptesParDefaut();
       const server = app.listen(PORT, () => {
         console.log('SERVER_READY:' + PORT);
         console.log(`Serveur MYBOGO-STOCK demarre sur http://localhost:${PORT}`);

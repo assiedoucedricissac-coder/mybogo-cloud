@@ -27,6 +27,7 @@ const abonnementCtrl       = require('../controllers/abonnementController');
 // Licence
 router.get('/licence/status',   licenceCtrl.getStatus);
 router.post('/licence/activate',  authMiddleware, requireRole('super_admin','admin'), licenceCtrl.activate);
+router.post('/licence/renouveler', authMiddleware, requireRole('super_admin','admin'), abonnementCtrl.renouvelerLicence);
 router.post('/licence/generate',  authMiddleware, requireRole('super_admin'), licenceCtrl.generate);
 // Accessible aussi à l'admin local (pas seulement super_admin) : le client doit pouvoir
 // lire son ID Machine et le transmettre au fournisseur SANS avoir besoin du compte
