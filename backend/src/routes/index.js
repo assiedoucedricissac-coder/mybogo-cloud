@@ -56,17 +56,6 @@ router.get('/public/paiement/statut/:reference', abonnementCtrl.statutPaiement);
 router.post('/admin/confirmer-paiement',  authMiddleware, requireRole('super_admin'), abonnementCtrl.confirmerPaiement);
 router.get('/admin/abonnements',          authMiddleware, requireRole('super_admin'), abonnementCtrl.listerAbonnements);
 
-// Jèko webhook (raw body needed for signature verification)
-router.post('/webhook/jeko', (req, res, next) => {
-  let raw = '';
-  req.on('data', chunk => { raw += chunk; });
-  req.on('end', () => {
-    req.rawBody = raw;
-    try { req.body = JSON.parse(raw); } catch {}
-    next();
-  });
-}, abonnementCtrl.webhookJeko);
-
 // Auth
 router.post('/auth/login', authCtrl.login);
 router.get('/auth/me', authMiddleware, authCtrl.getMe);

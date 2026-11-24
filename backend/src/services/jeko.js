@@ -46,7 +46,10 @@ async function creerPaiement({ montant, reference, successUrl, errorUrl, methode
 
 function verifierSignature(bodyBrut, signature) {
   const secret = process.env.JEKO_WEBHOOK_SECRET;
-  if (!secret) return true;
+  if (!secret) {
+    console.error('[Jèko] JEKO_WEBHOOK_SECRET manquant — webhook refusé.');
+    return false;
+  }
   const expected = crypto.createHmac('sha256', secret).update(bodyBrut).digest('hex');
   try {
     return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature || ''));

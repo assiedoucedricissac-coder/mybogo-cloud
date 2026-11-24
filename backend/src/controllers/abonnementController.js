@@ -2,6 +2,12 @@ const { mainDb } = require('../config/database');
 const { provisionnerBoutique } = require('../services/provisionnement');
 const { creerPaiement, verifierSignature } = require('../services/jeko');
 
+// Référence "MYBOGO-<slug>-<id>" : le slug peut contenir des tirets, l'id est le dernier segment.
+function parseReference(reference) {
+  const m = /^MYBOGO-(.+)-(\d+)$/.exec(reference || '');
+  return m ? { slug: m[1], aboId: Number(m[2]) } : null;
+}
+
 function getPlans(req, res) {
   const plans = mainDb.prepare('SELECT * FROM plans_abonnement WHERE actif=1 ORDER BY prix').all();
   res.json(plans);
@@ -86,18 +92,17 @@ async function webhookJeko(req, res) {
     return res.json({ received: true });
   }
 
+  const ref = parseReference(reference);
+  if (!ref) return res.json({ received: true });
+
   if (status !== 'success') {
-    const slug = reference.replace(/^MYBOGO-/, '').split('-')[0];
-    mainDb.prepare("UPDATE abonnements SET statut='echec' WHERE jeko_payment_id=? OR (slug=? AND statut='en_attente')")
-      .run(req.body.id || '', slug);
+    mainDb.prepare("UPDATE abonnements SET statut='echec' WHERE id=? AND slug=? AND statut='en_attente'")
+      .run(ref.aboId, ref.slug);
     return res.json({ received: true });
   }
 
-  // Trouver l'abonnement par jeko_payment_id ou par slug+référence
-  const slug = reference.replace(/^MYBOGO-/, '').split('-')[0];
-  const abo = mainDb.prepare(
-    "SELECT * FROM abonnements WHERE statut='en_attente' AND (jeko_payment_id=? OR slug=?) ORDER BY id DESC LIMIT 1"
-  ).get(req.body.id || '', slug);
+  const abo = mainDb.prepare("SELECT * FROM abonnements WHERE id=? AND slug=? AND statut='en_attente'")
+    .get(ref.aboId, ref.slug);
 
   if (!abo) return res.json({ received: true, note: 'Abonnement introuvable ou déjà activé' });
 
@@ -137,11 +142,11 @@ function confirmerPaiement(req, res) {
 }
 
 function statutPaiement(req, res) {
-  const { reference } = req.params;
-  const slug = reference.replace(/^MYBOGO-/, '').split('-')[0];
+  const ref = parseReference(req.params.reference);
+  if (!ref) return res.status(404).json({ message: 'Introuvable' });
   const abo = mainDb.prepare(
-    'SELECT slug, statut, nom_boutique, email FROM abonnements WHERE slug=? ORDER BY id DESC LIMIT 1'
-  ).get(slug);
+    'SELECT slug, statut, nom_boutique, email FROM abonnements WHERE id=? AND slug=?'
+  ).get(ref.aboId, ref.slug);
   if (!abo) return res.status(404).json({ message: 'Introuvable' });
   res.json(abo);
 }

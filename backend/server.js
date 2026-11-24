@@ -63,6 +63,13 @@ app.use((req, res, next) => {
 app.set('etag', false);
 app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 
+// Webhook Jèko : monté avant express.json(), qui consommerait le corps et casserait la signature.
+app.post('/api/webhook/jeko', express.raw({ type: '*/*', limit: '1mb' }), (req, res, next) => {
+  req.rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
+  try { req.body = JSON.parse(req.rawBody); } catch { req.body = {}; }
+  next();
+}, require('./src/controllers/abonnementController').webhookJeko);
+
 app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
