@@ -6,7 +6,9 @@ const bcrypt = require('bcryptjs');
 const tenantRegistry = require('./tenantRegistry');
 
 function tenantsDir() {
-  return process.env.MYBOGO_TENANT_DB_DIR || path.join(__dirname, '../../database/tenants');
+  if (process.env.MYBOGO_TENANT_DB_DIR) return process.env.MYBOGO_TENANT_DB_DIR;
+  if (process.env.MYBOGO_DB_PATH) return path.join(path.dirname(process.env.MYBOGO_DB_PATH), 'tenants');
+  return path.join(__dirname, '../../database/tenants');
 }
 
 // dureeJours / type : licence initiale (essai de 15 jours par défaut ; un paiement confirmé

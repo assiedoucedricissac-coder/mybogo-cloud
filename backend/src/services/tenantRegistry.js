@@ -4,8 +4,12 @@
 const fs = require('fs');
 const path = require('path');
 
+// Par défaut à côté de la base principale (MYBOGO_DB_PATH, sur le volume persistant Railway) :
+// un chemin dans le code serait effacé à chaque redéploiement, avec toutes les boutiques.
 const REGISTRY_PATH = process.env.MYBOGO_TENANTS_REGISTRY
-  || path.join(__dirname, '../../data/tenants-registry.json');
+  || (process.env.MYBOGO_DB_PATH
+    ? path.join(path.dirname(process.env.MYBOGO_DB_PATH), 'tenants-registry.json')
+    : path.join(__dirname, '../../data/tenants-registry.json'));
 
 function lire() {
   try { return JSON.parse(fs.readFileSync(REGISTRY_PATH, 'utf8')); }
