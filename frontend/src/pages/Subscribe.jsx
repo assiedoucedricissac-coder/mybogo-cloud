@@ -20,6 +20,9 @@ const METHODES = [
 export default function Subscribe() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState(searchParams.get('plan') ? 'payer' : 'essai'); // 'essai' | 'payer'
+  const [essai, setEssai] = useState({ nomBoutique: '', email: '', motDePasse: '' });
+  const [essaiOk, setEssaiOk] = useState(null);
   const [step, setStep] = useState('form'); // 'form' | 'payment'
   const [loading, setLoading] = useState(false);
   const [waveInfo, setWaveInfo] = useState(null);
@@ -39,6 +42,21 @@ export default function Subscribe() {
   const slugValide = /^[a-z0-9-]+$/.test(form.slug) && form.slug.length >= 3;
   const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
   const mdpValide = form.motDePasse.length >= 6;
+
+  async function handleEssai(e) {
+    e.preventDefault();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(essai.email)) return toast.error('Email invalide');
+    if (essai.motDePasse.length < 6) return toast.error('Le mot de passe doit contenir au moins 6 caractères');
+    setLoading(true);
+    try {
+      const r = await api.post('/public/essai', essai);
+      setEssaiOk(r.data);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Erreur lors de la création");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -68,6 +86,43 @@ export default function Subscribe() {
     }
   }
 
+  if (essaiOk) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8 px-4" style={{ fontFamily: 'Segoe UI, Arial, sans-serif' }}>
+        <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 p-6 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} className="text-green-600" />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 mb-1">Votre boutique est prête !</h2>
+          <p className="text-gray-500 text-sm mb-5">Essai gratuit de 15 jours, jusqu'au {new Date(essaiOk.finEssai).toLocaleDateString('fr-FR')}</p>
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-5 text-left space-y-3">
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-gray-600 text-sm">Code boutique</span>
+              <span className="font-black text-blue-700 text-xl tracking-wide">{essaiOk.slug}</span>
+            </div>
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-gray-600 text-sm">Email</span>
+              <span className="font-semibold text-gray-900 text-sm break-all text-right">{essaiOk.email}</span>
+            </div>
+            <div className="flex justify-between items-center gap-3">
+              <span className="text-gray-600 text-sm">Mot de passe</span>
+              <span className="text-gray-700 text-sm">celui que vous venez de choisir</span>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mb-5">
+            {essaiOk.emailEnvoye
+              ? `Ces accès vous ont aussi été envoyés par e-mail à ${essaiOk.email} (pensez à vérifier vos courriers indésirables).`
+              : "Notez bien votre code boutique : il est nécessaire à chaque connexion."}
+          </p>
+          <button onClick={() => navigate('/login')}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow">
+            Me connecter maintenant
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4" style={{ fontFamily: 'Segoe UI, Arial, sans-serif' }}>
       <div className="max-w-lg mx-auto">
@@ -77,10 +132,54 @@ export default function Subscribe() {
             <ArrowLeft size={16} /> Retour à l'accueil
           </button>
           <h1 className="text-2xl font-black text-gray-900">Créer votre espace boutique</h1>
-          <p className="text-gray-500 text-sm mt-1">Remplissez le formulaire puis payez pour activer votre accès</p>
+          <p className="text-gray-500 text-sm mt-1">
+            {mode === 'essai' ? "Essayez gratuitement pendant 15 jours, sans paiement" : "Remplissez le formulaire puis payez pour activer votre accès"}
+          </p>
         </div>
 
         {step === 'form' && (
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <button type="button" onClick={() => setMode('essai')}
+              className={`rounded-xl py-2.5 text-sm font-bold border-2 transition-all ${mode === 'essai' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-blue-300'}`}>
+              Essai gratuit 15 jours
+            </button>
+            <button type="button" onClick={() => setMode('payer')}
+              className={`rounded-xl py-2.5 text-sm font-bold border-2 transition-all ${mode === 'payer' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-600 hover:border-blue-300'}`}>
+              S'abonner directement
+            </button>
+          </div>
+        )}
+
+        {mode === 'essai' && step === 'form' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <form onSubmit={handleEssai} className="space-y-4">
+              <div>
+                <label className="label flex items-center gap-1.5"><Store size={13} className="text-gray-400" /> Nom de la boutique *</label>
+                <input className="input" placeholder="ex: MAMA BOUTIQUE" value={essai.nomBoutique}
+                  onChange={e => setEssai(f => ({ ...f, nomBoutique: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1.5"><Mail size={13} className="text-gray-400" /> Email *</label>
+                <input className="input" type="email" placeholder="votre@email.com" value={essai.email}
+                  onChange={e => setEssai(f => ({ ...f, email: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1.5"><Lock size={13} className="text-gray-400" /> Mot de passe *</label>
+                <input className="input" type="password" placeholder="Minimum 6 caractères" value={essai.motDePasse}
+                  onChange={e => setEssai(f => ({ ...f, motDePasse: e.target.value }))} required />
+              </div>
+              <div className="bg-green-50 rounded-xl p-4 border border-green-100 text-sm text-green-800">
+                Accès complet pendant 15 jours. Aucun paiement ni carte bancaire demandés. Vos accès vous sont envoyés par e-mail.
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-colors shadow">
+                {loading ? 'Création en cours...' : <><CheckCircle size={18} /> Démarrer mon essai gratuit</>}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {mode === 'payer' && step === 'form' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
 
             {/* Choix du plan */}

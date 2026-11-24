@@ -52,6 +52,7 @@ router.get('/public/download', (req, res) => {
 // Abonnements (public — inscription & paiement)
 router.get('/public/plans',               abonnementCtrl.getPlans);
 router.post('/public/abonnement',         abonnementCtrl.initierAbonnement);
+router.post('/public/essai',              abonnementCtrl.demarrerEssai);
 router.get('/public/paiement/statut/:reference', abonnementCtrl.statutPaiement);
 router.post('/admin/confirmer-paiement',  authMiddleware, requireRole('super_admin'), abonnementCtrl.confirmerPaiement);
 router.get('/admin/abonnements',          authMiddleware, requireRole('super_admin'), abonnementCtrl.listerAbonnements);

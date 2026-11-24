@@ -1,6 +1,62 @@
 const { mainDb } = require('../config/database');
 const { provisionnerBoutique } = require('../services/provisionnement');
 const { creerPaiement, verifierSignature } = require('../services/jeko');
+const { envoyerAcces } = require('../services/mailer');
+const tenantRegistry = require('../services/tenantRegistry');
+
+const CODES_RESERVES = new Set(['admin', 'api', 'www', 'app', 'mail', 'health', 'webhook', 'webhooks', 'uploads']);
+
+function genererSlug(nom) {
+  let base = String(nom).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24);
+  if (base.length < 3) base = 'boutique';
+  const pris = new Set(tenantRegistry.lister().map(t => t.slug));
+  const indisponible = s => pris.has(s) || CODES_RESERVES.has(s)
+    || mainDb.prepare("SELECT id FROM abonnements WHERE slug=? AND statut IN ('actif','en_attente')").get(s);
+  let slug = base;
+  for (let i = 2; indisponible(slug); i++) slug = `${base}-${i}`;
+  return slug;
+}
+
+// Anti-abus de l'essai gratuit : 5 inscriptions par heure et par adresse IP.
+const tentativesEssai = new Map();
+function limiteAtteinte(ip) {
+  const maintenant = Date.now();
+  const recentes = (tentativesEssai.get(ip) || []).filter(t => maintenant - t < 3600000);
+  if (recentes.length >= 5) { tentativesEssai.set(ip, recentes); return true; }
+  recentes.push(maintenant);
+  tentativesEssai.set(ip, recentes);
+  return false;
+}
+
+async function demarrerEssai(req, res) {
+  const { nomBoutique, email, motDePasse } = req.body;
+  if (!nomBoutique || !email || !motDePasse)
+    return res.status(400).json({ message: 'Nom de la boutique, e-mail et mot de passe sont requis.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return res.status(400).json({ message: 'Adresse e-mail invalide.' });
+  if (String(motDePasse).length < 6)
+    return res.status(400).json({ message: 'Le mot de passe doit contenir au moins 6 caractères.' });
+
+  const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  if (limiteAtteinte(ip))
+    return res.status(429).json({ message: "Trop d'inscriptions depuis cette connexion. Réessayez plus tard." });
+
+  const emailNorm = email.trim().toLowerCase();
+  if (tenantRegistry.lister().some(t => (t.email || '').toLowerCase() === emailNorm))
+    return res.status(400).json({ message: 'Un compte existe déjà avec cet e-mail. Connectez-vous depuis la page de connexion.' });
+
+  const slug = genererSlug(nomBoutique);
+  try {
+    provisionnerBoutique({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, motDePasse, dureeJours: 15, type: 'trial' });
+  } catch (err) {
+    return res.status(400).json({ message: err.message });
+  }
+  const finEssai = new Date(Date.now() + 15 * 86400000).toISOString();
+  const emailEnvoye = await envoyerAcces({ email: emailNorm, nomBoutique: nomBoutique.trim(), slug, finLicence: finEssai, essai: true });
+  res.status(201).json({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, finEssai, emailEnvoye });
+}
 
 // Référence "MYBOGO-<slug>-<id>" : le slug peut contenir des tirets, l'id est le dernier segment.
 function parseReference(reference) {
@@ -21,7 +77,8 @@ async function initierAbonnement(req, res) {
     return res.status(400).json({ message: 'Le code boutique ne doit contenir que des lettres minuscules, chiffres et tirets.' });
 
   const existant = mainDb.prepare("SELECT id FROM abonnements WHERE slug=? AND statut IN ('actif','en_attente')").get(slug);
-  if (existant) return res.status(400).json({ message: `Le code boutique "${slug}" est déjà utilisé.` });
+  if (existant || tenantRegistry.lister().some(t => t.slug === slug) || CODES_RESERVES.has(slug))
+    return res.status(400).json({ message: `Le code boutique "${slug}" est déjà utilisé.` });
 
   const planData = mainDb.prepare('SELECT * FROM plans_abonnement WHERE code=? AND actif=1').get(plan);
   if (!planData) return res.status(400).json({ message: 'Plan invalide.' });
@@ -115,6 +172,7 @@ async function webhookJeko(req, res) {
     mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
       .run(dateDebut, dateFin, reference, abo.id);
     console.log(`[Jèko] Boutique activée: ${abo.slug}`);
+    envoyerAcces({ email: abo.email, nomBoutique: abo.nom_boutique, slug: abo.slug, finLicence: dateFin, essai: false });
   } catch (err) {
     console.error('[Jèko] Erreur provisionnement:', err.message);
   }
@@ -135,6 +193,7 @@ function confirmerPaiement(req, res) {
     provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
     mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
       .run(dateDebut, dateFin, wave_ref || 'MANUEL', abonnement_id);
+    envoyerAcces({ email: abo.email, nomBoutique: abo.nom_boutique, slug: abo.slug, finLicence: dateFin, essai: false });
     res.json({ message: 'Boutique créée avec succès.', slug: abo.slug, email: abo.email, date_fin: dateFin });
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -158,4 +217,4 @@ function listerAbonnements(req, res) {
   res.json(abos);
 }
 
-module.exports = { getPlans, initierAbonnement, webhookJeko, confirmerPaiement, statutPaiement, listerAbonnements };
+module.exports = { getPlans, initierAbonnement, demarrerEssai, webhookJeko, confirmerPaiement, statutPaiement, listerAbonnements };
