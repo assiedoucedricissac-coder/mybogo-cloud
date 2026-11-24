@@ -9,7 +9,11 @@ function tenantsDir() {
   return process.env.MYBOGO_TENANT_DB_DIR || path.join(__dirname, '../../database/tenants');
 }
 
-function provisionnerBoutique({ slug, nomBoutique, email, motDePasse }) {
+// dureeJours / type : licence initiale (essai de 15 jours par défaut ; un paiement confirmé
+// passe la durée du plan payé avec type 'full').
+function provisionnerBoutique({ slug, nomBoutique, email, motDePasse, dureeJours = 15, type = 'trial' }) {
+  const jours = Math.max(1, Math.min(3650, parseInt(dureeJours, 10) || 15));
+  const typeLicence = type === 'full' ? 'full' : 'trial';
   if (!slug || !nomBoutique || !email || !motDePasse) {
     throw new Error('slug, nomBoutique, email et motDePasse sont requis.');
   }
@@ -44,9 +48,9 @@ function provisionnerBoutique({ slug, nomBoutique, email, motDePasse }) {
 
   db.prepare(`
     INSERT INTO licence (id, type, expires_at, client_name, activated_at)
-    VALUES (1, 'full', '2099-12-31', ?, date('now'))
-    ON CONFLICT(id) DO UPDATE SET type='full', expires_at='2099-12-31', client_name=excluded.client_name, activated_at=date('now')
-  `).run(nomBoutique);
+    VALUES (1, ?, date('now', ?), ?, date('now'))
+    ON CONFLICT(id) DO UPDATE SET type=excluded.type, expires_at=excluded.expires_at, client_name=excluded.client_name, activated_at=date('now')
+  `).run(typeLicence, `+${jours} days`, nomBoutique);
 
   db.prepare('INSERT INTO entreprise (id, nom) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET nom=excluded.nom')
     .run(nomBoutique);

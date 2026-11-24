@@ -1023,4 +1023,14 @@ const mainDb = {
   exec: (sql) => _rawDb.exec(sql),
 };
 
-module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase };
+// Interface db (prepare/exec) sur la connexion en cache d'une boutique — pour l'administration
+// centrale, hors contexte de requête d'une boutique.
+function tenantDbWrapped(slug, tenantDbPath) {
+  const raw = getTenantDb(slug, tenantDbPath);
+  return {
+    exec: (sql) => raw.exec(sql),
+    prepare: (sql) => wrapStmt(raw.prepare(sql)),
+  };
+}
+
+module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase, tenantDbWrapped };

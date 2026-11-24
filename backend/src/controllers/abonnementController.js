@@ -111,7 +111,7 @@ async function webhookJeko(req, res) {
   const dateFin = new Date(Date.now() + planData.duree_jours * 86400000).toISOString();
 
   try {
-    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp });
+    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
     mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
       .run(dateDebut, dateFin, reference, abo.id);
     console.log(`[Jèko] Boutique activée: ${abo.slug}`);
@@ -132,7 +132,7 @@ function confirmerPaiement(req, res) {
   const dateFin = new Date(Date.now() + planData.duree_jours * 86400000).toISOString();
 
   try {
-    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp });
+    provisionnerBoutique({ slug: abo.slug, nomBoutique: abo.nom_boutique, email: abo.email, motDePasse: abo.mdp_temp, dureeJours: planData.duree_jours, type: 'full' });
     mainDb.prepare("UPDATE abonnements SET statut='actif', date_debut=?, date_fin=?, wave_ref=?, mdp_temp=NULL WHERE id=?")
       .run(dateDebut, dateFin, wave_ref || 'MANUEL', abonnement_id);
     res.json({ message: 'Boutique créée avec succès.', slug: abo.slug, email: abo.email, date_fin: dateFin });
