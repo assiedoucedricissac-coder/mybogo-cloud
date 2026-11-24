@@ -43,6 +43,23 @@ function lireLicence(db) {
   return db.prepare('SELECT type, expires_at, activated_at FROM licence WHERE id = 1').get();
 }
 
+function compter(db, sql) {
+  try { return db.prepare(sql).get().n || 0; } catch { return 0; }
+}
+
+function statsBoutique(db) {
+  let derniereConnexion = null;
+  try { derniereConnexion = db.prepare("SELECT MAX(derniere_connexion) AS d FROM users WHERE role != 'super_admin'").get().d; } catch {}
+  return {
+    nbUtilisateurs: compter(db, "SELECT COUNT(*) AS n FROM users WHERE role != 'super_admin' AND actif = 1"),
+    nbProduits: compter(db, 'SELECT COUNT(*) AS n FROM produits WHERE actif = 1'),
+    nbClients: compter(db, 'SELECT COUNT(*) AS n FROM clients WHERE actif = 1'),
+    nbVentes: compter(db, "SELECT COUNT(*) AS n FROM ventes WHERE statut != 'annulee'"),
+    chiffreAffaires: compter(db, "SELECT COALESCE(SUM(total), 0) AS n FROM ventes WHERE statut != 'annulee'"),
+    derniereConnexion,
+  };
+}
+
 function lister(req, res) {
   const derniersAbos = {};
   for (const a of mainDb.prepare(
@@ -51,11 +68,17 @@ function lister(req, res) {
 
   const boutiques = tenantRegistry.lister().map(t => {
     let licence = null;
-    try { licence = lireLicence(tenantDbWrapped(t.slug, t.dbPath)); } catch (e) {
+    let activite = {};
+    try {
+      const tdb = tenantDbWrapped(t.slug, t.dbPath);
+      licence = lireLicence(tdb);
+      activite = statsBoutique(tdb);
+    } catch (e) {
       console.error(`[ADMIN] Lecture licence "${t.slug}":`, e.message);
     }
     const abo = derniersAbos[t.slug] || null;
     return {
+      ...activite,
       slug: t.slug,
       nom: t.nom,
       email: t.email,
@@ -128,10 +151,60 @@ function reinitialiserMotDePasse(req, res) {
   res.json({ slug: b.tenant.slug, email: b.tenant.email });
 }
 
+function utilisateurs(req, res) {
+  const b = trouverBoutique(req.params.slug);
+  if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
+  res.json(b.db.prepare(
+    "SELECT id, nom, prenom, email, role, actif, derniere_connexion, created_at FROM users WHERE role != 'super_admin' AND email NOT IN ('admin@mybogo.com', 'superadmin@mybogo.ci') ORDER BY role, nom"
+  ).all());
+}
+
+function basculerUtilisateur(req, res) {
+  const b = trouverBoutique(req.params.slug);
+  if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
+  const u = b.db.prepare("SELECT id, actif FROM users WHERE id = ? AND role != 'super_admin'").get(Number(req.params.id));
+  if (!u) return res.status(404).json({ message: 'Utilisateur introuvable.' });
+  const actif = u.actif ? 0 : 1;
+  b.db.prepare('UPDATE users SET actif = ? WHERE id = ?').run(actif, u.id);
+  res.json({ id: u.id, actif });
+}
+
+function motDePasseUtilisateur(req, res) {
+  const b = trouverBoutique(req.params.slug);
+  if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
+  const { motDePasse } = req.body;
+  if (!motDePasse || motDePasse.length < 6) return res.status(400).json({ message: 'Mot de passe : 6 caractères minimum.' });
+  const u = b.db.prepare("SELECT id FROM users WHERE id = ? AND role != 'super_admin'").get(Number(req.params.id));
+  if (!u) return res.status(404).json({ message: 'Utilisateur introuvable.' });
+  b.db.prepare('UPDATE users SET mot_de_passe = ?, actif = 1 WHERE id = ?').run(bcrypt.hashSync(motDePasse, 10), u.id);
+  res.json({ id: u.id });
+}
+
+function definirExpiration(req, res) {
+  const b = trouverBoutique(req.params.slug);
+  if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
+  const { date } = req.body;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || isNaN(new Date(date + 'T00:00:00Z'))) return res.status(400).json({ message: 'Date invalide.' });
+  const licence = lireLicence(b.db);
+  const type = !licence || licence.type === 'suspended' ? 'full' : licence.type;
+  b.db.prepare('UPDATE licence SET type = ?, expires_at = ? WHERE id = 1').run(type, date);
+  res.json({ slug: b.tenant.slug, expiresAt: date });
+}
+
+// Ouvre la boutique en tant que son administrateur (comme « Accéder » dans Ecole Manager).
+function acceder(req, res) {
+  const b = trouverBoutique(req.params.slug);
+  if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
+  const user = b.db.prepare("SELECT id, nom, prenom, email, role, actif FROM users WHERE email = ? AND role = 'admin'").get(b.tenant.email);
+  if (!user) return res.status(404).json({ message: "Compte administrateur introuvable dans cette boutique." });
+  const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
+  res.json({ token, user, boutique: b.tenant.slug });
+}
+
 async function testerEmail(req, res) {
   const { email } = req.body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, message: 'Adresse e-mail invalide.' });
   res.json(await require('../services/mailer').tester(email));
 }
 
-module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail };
+module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail, utilisateurs, basculerUtilisateur, motDePasseUtilisateur, definirExpiration, acceder };

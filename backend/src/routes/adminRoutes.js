@@ -9,6 +9,11 @@ router.post('/boutiques', adminAuth, adminController.creer);
 router.post('/boutiques/:slug/prolonger', adminAuth, adminController.prolonger);
 router.post('/boutiques/:slug/suspendre', adminAuth, adminController.suspendre);
 router.post('/boutiques/:slug/reactiver', adminAuth, adminController.reactiver);
+router.get('/boutiques/:slug/utilisateurs', adminAuth, adminController.utilisateurs);
+router.post('/boutiques/:slug/utilisateurs/:id/basculer', adminAuth, adminController.basculerUtilisateur);
+router.post('/boutiques/:slug/utilisateurs/:id/mot-de-passe', adminAuth, adminController.motDePasseUtilisateur);
+router.post('/boutiques/:slug/expiration', adminAuth, adminController.definirExpiration);
+router.post('/boutiques/:slug/acceder', adminAuth, adminController.acceder);
 router.post('/test-email', adminAuth, adminController.testerEmail);
 router.post('/boutiques/:slug/mot-de-passe', adminAuth, adminController.reinitialiserMotDePasse);
 
