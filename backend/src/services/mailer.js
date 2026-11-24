@@ -2,8 +2,26 @@ const nodemailer = require('nodemailer');
 
 // Configuration par variables d'environnement Railway (n'importe quel fournisseur SMTP) :
 // SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM (ex: "MYBOGO-STOCK <contact@exemple.com>").
+// Resend (RESEND_API_KEY) est prioritaire : il passe par HTTPS, alors que Railway bloque souvent le SMTP sortant.
 function configure() {
-  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return !!process.env.RESEND_API_KEY || !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+function expediteur() {
+  return process.env.MAIL_FROM || (process.env.RESEND_API_KEY ? 'MYBOGO-STOCK <onboarding@resend.dev>' : process.env.SMTP_USER);
+}
+
+async function envoyer({ to, subject, text, html }) {
+  if (process.env.RESEND_API_KEY) {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: expediteur(), to: [to], subject, text, ...(html ? { html } : {}) }),
+    });
+    if (!r.ok) throw new Error(`Resend ${r.status} : ${(await r.text()).slice(0, 300)}`);
+    return;
+  }
+  await getTransport().sendMail({ from: expediteur(), to, subject, text, ...(html ? { html } : {}) });
 }
 
 let transport = null;
@@ -57,13 +75,7 @@ async function envoyerAcces({ email, nomBoutique, slug, finLicence, essai }) {
 </div>`;
 
   try {
-    await getTransport().sendMail({
-      from: process.env.MAIL_FROM || process.env.SMTP_USER,
-      to: email,
-      subject: sujet,
-      text: texte,
-      html,
-    });
+    await envoyer({ to: email, subject: sujet, text: texte, html });
     return true;
   } catch (err) {
     console.error('[MAIL] Échec envoi à', email, ':', err.message);
@@ -73,16 +85,14 @@ async function envoyerAcces({ email, nomBoutique, slug, finLicence, essai }) {
 
 // Pour le bouton de test du panneau d'administration : renvoie la vraie raison d'un échec.
 async function tester(destinataire) {
-  const manquantes = ['SMTP_HOST', 'SMTP_USER', 'SMTP_PASS'].filter(k => !process.env[k]);
-  if (manquantes.length) return { ok: false, message: `Variables absentes sur le serveur : ${manquantes.join(', ')}. Vérifiez les noms et que Railway a bien redéployé.` };
+  if (!configure()) return { ok: false, message: "Aucune configuration d'e-mail sur le serveur : variable RESEND_API_KEY absente. Vérifiez le nom de la variable et que Railway a bien redéployé." };
   try {
-    await getTransport().sendMail({
-      from: process.env.MAIL_FROM || process.env.SMTP_USER,
+    await envoyer({
       to: destinataire,
       subject: 'Test MYBOGO-STOCK',
       text: "Si vous lisez ce message, l'envoi d'e-mails de MYBOGO-STOCK fonctionne.",
     });
-    return { ok: true, message: `E-mail de test envoyé à ${destinataire}.` };
+    return { ok: true, message: `E-mail de test envoyé à ${destinataire} (expéditeur : ${expediteur()}).` };
   } catch (err) {
     return { ok: false, message: err.message };
   }
