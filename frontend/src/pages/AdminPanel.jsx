@@ -110,6 +110,7 @@ function CarteBoutique({ b, onOuvrir, onAcceder }) {
               <div style={{ fontWeight: 700, fontSize: 15, wordBreak: 'break-word' }}>{b.nom}</div>
               <div style={{ fontSize: 12, color: '#60a5fa', fontFamily: 'monospace' }}>{b.slug}</div>
               <div style={{ fontSize: 12, color: '#94a3b8', wordBreak: 'break-all' }}>{b.email}</div>
+              {b.telephone && <div style={{ fontSize: 12, color: '#94a3b8' }}>{b.telephone}</div>}
             </div>
           </div>
           <Badge statut={b.statut} />
@@ -275,7 +276,7 @@ function FicheBoutique({ b, onRetour, onAction, onDate, onAcceder, notifier }) {
             <div style={{ minWidth: 0 }}>
               <h2 style={{ margin: 0, fontSize: 19, wordBreak: 'break-word' }}>{b.nom}</h2>
               <div style={{ fontSize: 13, color: '#94a3b8' }}>Code : <span style={{ color: '#60a5fa', fontFamily: 'monospace', fontWeight: 700 }}>{b.slug}</span> · créée le {new Date(b.createdAt).toLocaleDateString('fr-FR')}</div>
-              <div style={{ fontSize: 13, color: '#94a3b8', wordBreak: 'break-all' }}>{b.email}</div>
+              <div style={{ fontSize: 13, color: '#94a3b8', wordBreak: 'break-all' }}>{b.email}{b.telephone ? ` · ${b.telephone}` : ''}</div>
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

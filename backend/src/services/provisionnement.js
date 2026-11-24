@@ -13,7 +13,7 @@ function tenantsDir() {
 
 // dureeJours / type : licence initiale (essai de 15 jours par défaut ; un paiement confirmé
 // passe la durée du plan payé avec type 'full').
-function provisionnerBoutique({ slug, nomBoutique, email, motDePasse, dureeJours = 15, type = 'trial' }) {
+function provisionnerBoutique({ slug, nomBoutique, email, motDePasse, dureeJours = 15, type = 'trial', telephone = '' }) {
   const jours = Math.max(1, Math.min(3650, parseInt(dureeJours, 10) || 15));
   const typeLicence = type === 'full' ? 'full' : 'trial';
   if (!slug || !nomBoutique || !email || !motDePasse) {
@@ -54,14 +54,14 @@ function provisionnerBoutique({ slug, nomBoutique, email, motDePasse, dureeJours
     ON CONFLICT(id) DO UPDATE SET type=excluded.type, expires_at=excluded.expires_at, client_name=excluded.client_name, activated_at=date('now')
   `).run(typeLicence, `+${jours} days`, nomBoutique);
 
-  db.prepare('INSERT INTO entreprise (id, nom) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET nom=excluded.nom')
-    .run(nomBoutique);
+  db.prepare('INSERT INTO entreprise (id, nom, telephone, email) VALUES (1, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET nom=excluded.nom, telephone=excluded.telephone, email=excluded.email')
+    .run(nomBoutique, telephone || '', email);
 
   db.close();
 
-  tenantRegistry.ajouter({ slug, nom: nomBoutique, dbPath, email, createdAt: new Date().toISOString() });
+  tenantRegistry.ajouter({ slug, nom: nomBoutique, dbPath, email, telephone: telephone || '', createdAt: new Date().toISOString() });
 
-  return { slug, nomBoutique, dbPath, email };
+  return { slug, nomBoutique, dbPath, email, telephone: telephone || '' };
 }
 
 module.exports = { provisionnerBoutique, tenantsDir };

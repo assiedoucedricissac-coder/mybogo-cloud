@@ -82,6 +82,7 @@ function lister(req, res) {
       slug: t.slug,
       nom: t.nom,
       email: t.email,
+      telephone: t.telephone || '',
       createdAt: t.createdAt,
       statut: statutDe(licence),
       licenceType: licence?.type || null,

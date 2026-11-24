@@ -21,7 +21,7 @@ export default function Subscribe() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState(searchParams.get('plan') ? 'payer' : 'essai'); // 'essai' | 'payer'
-  const [essai, setEssai] = useState({ nomBoutique: '', email: '', motDePasse: '' });
+  const [essai, setEssai] = useState({ nomBoutique: '', email: '', telephone: '', motDePasse: '' });
   const [essaiOk, setEssaiOk] = useState(null);
   const [step, setStep] = useState('form'); // 'form' | 'payment'
   const [loading, setLoading] = useState(false);
@@ -97,6 +97,10 @@ export default function Subscribe() {
           <p className="text-gray-500 text-sm mb-5">Essai gratuit de 15 jours, jusqu'au {new Date(essaiOk.finEssai).toLocaleDateString('fr-FR')}</p>
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 mb-5 text-left space-y-3">
             <div className="flex justify-between items-center gap-3">
+              <span className="text-gray-600 text-sm">Boutique</span>
+              <span className="font-semibold text-gray-900 text-sm text-right">{essaiOk.nomBoutique}</span>
+            </div>
+            <div className="flex justify-between items-center gap-3">
               <span className="text-gray-600 text-sm">Code boutique</span>
               <span className="font-black text-blue-700 text-xl tracking-wide">{essaiOk.slug}</span>
             </div>
@@ -104,6 +108,12 @@ export default function Subscribe() {
               <span className="text-gray-600 text-sm">Email</span>
               <span className="font-semibold text-gray-900 text-sm break-all text-right">{essaiOk.email}</span>
             </div>
+            {essaiOk.telephone && (
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-gray-600 text-sm">Téléphone</span>
+                <span className="font-semibold text-gray-900 text-sm">{essaiOk.telephone}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center gap-3">
               <span className="text-gray-600 text-sm">Mot de passe</span>
               <span className="text-gray-700 text-sm">celui que vous venez de choisir</span>
@@ -162,6 +172,11 @@ export default function Subscribe() {
                 <label className="label flex items-center gap-1.5"><Mail size={13} className="text-gray-400" /> Email *</label>
                 <input className="input" type="email" placeholder="votre@email.com" value={essai.email}
                   onChange={e => setEssai(f => ({ ...f, email: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="label flex items-center gap-1.5"><Phone size={13} className="text-gray-400" /> Téléphone / WhatsApp</label>
+                <input className="input" type="tel" placeholder="ex: 07 00 00 00 00" value={essai.telephone}
+                  onChange={e => setEssai(f => ({ ...f, telephone: e.target.value }))} />
               </div>
               <div>
                 <label className="label flex items-center gap-1.5"><Lock size={13} className="text-gray-400" /> Mot de passe *</label>

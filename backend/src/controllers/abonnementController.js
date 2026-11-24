@@ -1,7 +1,7 @@
 const { mainDb, tenantDbWrapped, currentTenantSlug } = require('../config/database');
 const { provisionnerBoutique } = require('../services/provisionnement');
 const { creerPaiement, verifierSignature } = require('../services/jeko');
-const { envoyerAcces } = require('../services/mailer');
+const { envoyerAcces, notifierInscription } = require('../services/mailer');
 const tenantRegistry = require('../services/tenantRegistry');
 
 const CODES_RESERVES = new Set(['admin', 'api', 'www', 'app', 'mail', 'health', 'webhook', 'webhooks', 'uploads']);
@@ -32,6 +32,7 @@ function limiteAtteinte(ip) {
 
 async function demarrerEssai(req, res) {
   const { nomBoutique, email, motDePasse } = req.body;
+  const telephone = String(req.body.telephone || '').replace(/[^\d+ ()-]/g, '').trim().slice(0, 25);
   if (!nomBoutique || !email || !motDePasse)
     return res.status(400).json({ message: 'Nom de la boutique, e-mail et mot de passe sont requis.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
@@ -49,13 +50,14 @@ async function demarrerEssai(req, res) {
 
   const slug = genererSlug(nomBoutique);
   try {
-    provisionnerBoutique({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, motDePasse, dureeJours: 15, type: 'trial' });
+    provisionnerBoutique({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, motDePasse, dureeJours: 15, type: 'trial', telephone });
   } catch (err) {
     return res.status(400).json({ message: err.message });
   }
   const finEssai = new Date(Date.now() + 15 * 86400000).toISOString();
-  const emailEnvoye = await envoyerAcces({ email: emailNorm, nomBoutique: nomBoutique.trim(), slug, finLicence: finEssai, essai: true });
-  res.status(201).json({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, finEssai, emailEnvoye });
+  const emailEnvoye = await envoyerAcces({ email: emailNorm, nomBoutique: nomBoutique.trim(), slug, finLicence: finEssai, essai: true, telephone });
+  notifierInscription({ nomBoutique: nomBoutique.trim(), slug, email: emailNorm, telephone, finEssai });
+  res.status(201).json({ slug, nomBoutique: nomBoutique.trim(), email: emailNorm, telephone, finEssai, emailEnvoye });
 }
 
 // Référence "MYBOGO-<slug>-<id>" : le slug peut contenir des tirets, l'id est le dernier segment.
