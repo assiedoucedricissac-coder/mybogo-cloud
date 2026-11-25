@@ -8,6 +8,7 @@ const { tenantsDir } = require('./provisionnement');
 function diagnostic() {
   const registre = tenantRegistry.REGISTRY_PATH;
   const dossier = path.dirname(registre);
+  const dossierPosix = dossier.replace(/\\/g, '/');
   let montage = null;
   let persistant = null; // null = impossible à déterminer (hors Linux)
 
@@ -17,7 +18,7 @@ function diagnostic() {
       const [dev, pt, type] = ligne.split(' ');
       if (!pt) continue;
       const prefixe = pt.endsWith('/') ? pt : pt + '/';
-      if ((dossier === pt || (dossier + '/').startsWith(prefixe)) && (!meilleur || pt.length > meilleur.pt.length)) {
+      if ((dossierPosix === pt || (dossierPosix + '/').startsWith(prefixe)) && (!meilleur || pt.length > meilleur.pt.length)) {
         meilleur = { dev, pt, type };
       }
     }
