@@ -219,4 +219,25 @@ router.post('/location/contrats',            authMiddleware, requireRole('admin'
 router.put('/location/contrats/:id',         authMiddleware, requireRole('admin','gestionnaire'), locationCtrl.updateContrat);
 router.post('/location/contrats/:id/retour', authMiddleware, requireRole('admin','gestionnaire'), locationCtrl.enregistrerRetour);
 
+// Restauration (module activable par boutique)
+const restoCtrl = require('../controllers/restaurationController');
+const restoOn = [authMiddleware, restoCtrl.moduleActif];
+const restoGestion = requireRole('admin','gestionnaire');
+const restoService = requireRole('admin','gestionnaire','caissier');
+router.get('/restauration/stats',                restoOn, restoGestion, restoCtrl.getStats);
+router.get('/restauration/plats',                restoOn, restoCtrl.getPlats);
+router.post('/restauration/plats',               restoOn, restoGestion, restoCtrl.savePlat);
+router.put('/restauration/plats/:id',            restoOn, restoGestion, restoCtrl.savePlat);
+router.delete('/restauration/plats/:id',         restoOn, restoGestion, restoCtrl.deletePlat);
+router.get('/restauration/tables',               restoOn, restoCtrl.getTables);
+router.post('/restauration/tables',              restoOn, restoGestion, restoCtrl.saveTable);
+router.put('/restauration/tables/:id',           restoOn, restoGestion, restoCtrl.saveTable);
+router.delete('/restauration/tables/:id',        restoOn, restoGestion, restoCtrl.deleteTable);
+router.get('/restauration/commandes',            restoOn, restoCtrl.getCommandes);
+router.get('/restauration/commandes/:id',        restoOn, restoCtrl.getCommande);
+router.post('/restauration/commandes',           restoOn, restoService, restoCtrl.createCommande);
+router.post('/restauration/commandes/:id/lignes',   restoOn, restoService, restoCtrl.ajouterLignes);
+router.put('/restauration/commandes/:id/statut',    restoOn, restoService, restoCtrl.changerStatut);
+router.post('/restauration/commandes/:id/encaisser', restoOn, restoService, restoCtrl.encaisser);
+
 module.exports = router;

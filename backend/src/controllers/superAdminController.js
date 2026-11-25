@@ -32,7 +32,7 @@ function getEntreprise(req, res) {
     feat_vente_melange: 1, feat_facturation_sans_vente: 1, feat_modifier_prix_caisse: 1, feat_vente_conditionnement: 1,
     feat_vente_credit: 1, feat_multi_tickets: 1, feat_achats_correction: 1, feat_rapports: 1,
     feat_module_inventaires: 1, feat_module_facturation: 1, feat_module_caisse: 1,
-    feat_module_clients: 1, feat_module_dgi: 0, feat_module_sauvegarde: 1, feat_module_location: 0 };
+    feat_module_clients: 1, feat_module_dgi: 0, feat_module_sauvegarde: 1, feat_module_location: 0, feat_module_restauration: 0 };
   // Le PIN n'est jamais renvoyé en clair (même à l'admin qui l'a défini) — cette route est
   // accessible à tous les rôles connectés (impression ticket, etc.), et renvoyer la valeur
   // réelle ici permettrait de contourner la protection simplement en lisant la réponse réseau.
@@ -60,6 +60,7 @@ function updateFonctionnalites(req, res) {
     feat_vente_credit, feat_multi_tickets, feat_achats_correction, feat_rapports,
     feat_module_inventaires, feat_module_facturation, feat_module_caisse,
     feat_module_clients, feat_module_dgi, feat_module_sauvegarde, feat_module_location,
+    feat_module_restauration,
   } = req.body;
   db.prepare(`
     INSERT INTO entreprise (id,
@@ -67,8 +68,9 @@ function updateFonctionnalites(req, res) {
       feat_vente_credit, feat_multi_tickets, feat_achats_correction, feat_rapports,
       feat_module_inventaires, feat_module_facturation, feat_module_caisse,
       feat_module_clients, feat_module_dgi, feat_module_sauvegarde, feat_module_location,
+      feat_module_restauration,
       updated_at)
-    VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       feat_vente_melange=excluded.feat_vente_melange,
       feat_facturation_sans_vente=excluded.feat_facturation_sans_vente,
@@ -85,6 +87,7 @@ function updateFonctionnalites(req, res) {
       feat_module_dgi=excluded.feat_module_dgi,
       feat_module_sauvegarde=excluded.feat_module_sauvegarde,
       feat_module_location=excluded.feat_module_location,
+      feat_module_restauration=excluded.feat_module_restauration,
       updated_at=CURRENT_TIMESTAMP
   `).run(
     feat_vente_melange ? 1 : 0, feat_facturation_sans_vente ? 1 : 0,
@@ -94,7 +97,8 @@ function updateFonctionnalites(req, res) {
     feat_module_inventaires !== false ? 1 : 0, feat_module_facturation !== false ? 1 : 0,
     feat_module_caisse !== false ? 1 : 0, feat_module_clients !== false ? 1 : 0,
     feat_module_dgi ? 1 : 0, feat_module_sauvegarde !== false ? 1 : 0,
-    feat_module_location ? 1 : 0
+    feat_module_location ? 1 : 0,
+    feat_module_restauration ? 1 : 0
   );
   res.json({ message: 'Options mises à jour' });
 }

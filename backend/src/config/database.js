@@ -450,6 +450,7 @@ function initDatabase() {
       // protection (comportement historique inchangé tant que le client ne configure rien).
       if (!entCols.includes('historique_pin'))               _rawDb.exec('ALTER TABLE entreprise ADD COLUMN historique_pin TEXT');
       if (!entCols.includes('feat_module_location'))      _rawDb.exec('ALTER TABLE entreprise ADD COLUMN feat_module_location INTEGER DEFAULT 0');
+      if (!entCols.includes('feat_module_restauration'))  _rawDb.exec('ALTER TABLE entreprise ADD COLUMN feat_module_restauration INTEGER DEFAULT 0');
     }
   } catch(e) { console.error('Vérification colonnes entreprise erreur:', e.message); }
 
@@ -553,6 +554,7 @@ function initDatabase() {
       feat_module_dgi INTEGER DEFAULT 0,
       feat_module_sauvegarde INTEGER DEFAULT 1,
       feat_module_location INTEGER DEFAULT 0,
+      feat_module_restauration INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (CURRENT_TIMESTAMP),
       updated_at TEXT DEFAULT (CURRENT_TIMESTAMP)
     );
@@ -939,6 +941,58 @@ function initDatabase() {
       prix_unitaire REAL NOT NULL,
       quantite_rendue INTEGER DEFAULT 0,
       quantite_manquante INTEGER DEFAULT 0
+    );
+
+    -- Restauration : carte (plats & boissons)
+    CREATE TABLE IF NOT EXISTS resto_plats (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nom TEXT NOT NULL,
+      categorie TEXT DEFAULT 'Plats',
+      description TEXT,
+      prix REAL NOT NULL DEFAULT 0,
+      disponible INTEGER DEFAULT 1,
+      actif INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (CURRENT_TIMESTAMP)
+    );
+
+    -- Restauration : tables de la salle
+    CREATE TABLE IF NOT EXISTS resto_tables (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nom TEXT NOT NULL,
+      capacite INTEGER DEFAULT 4,
+      zone TEXT DEFAULT 'Salle',
+      actif INTEGER DEFAULT 1
+    );
+
+    -- Restauration : commandes (sur place, à emporter, livraison)
+    CREATE TABLE IF NOT EXISTS resto_commandes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      numero TEXT UNIQUE NOT NULL,
+      type TEXT DEFAULT 'sur_place' CHECK(type IN ('sur_place','emporter','livraison')),
+      table_id INTEGER REFERENCES resto_tables(id),
+      client_nom TEXT,
+      client_telephone TEXT,
+      adresse_livraison TEXT,
+      statut TEXT DEFAULT 'en_attente' CHECK(statut IN ('en_attente','en_preparation','pret','servi','paye','annule')),
+      sous_total REAL DEFAULT 0,
+      remise REAL DEFAULT 0,
+      total REAL DEFAULT 0,
+      mode_paiement TEXT,
+      montant_paye REAL DEFAULT 0,
+      notes TEXT,
+      user_id INTEGER REFERENCES users(id),
+      created_at TEXT DEFAULT (CURRENT_TIMESTAMP),
+      paye_at TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS resto_commande_lignes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      commande_id INTEGER NOT NULL REFERENCES resto_commandes(id) ON DELETE CASCADE,
+      plat_id INTEGER REFERENCES resto_plats(id),
+      nom TEXT NOT NULL,
+      quantite INTEGER NOT NULL,
+      prix_unitaire REAL NOT NULL,
+      note TEXT
     );
   `);
 

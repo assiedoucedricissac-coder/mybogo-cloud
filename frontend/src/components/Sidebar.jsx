@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, Warehouse, ShoppingCart, Receipt, TruckIcon, Users, UserCircle, BarChart3, ShoppingBag, FileText, Shield, ClipboardList, HardDrive, Settings, CalendarClock } from 'lucide-react';
+import { LayoutDashboard, Package, Warehouse, ShoppingCart, Receipt, TruckIcon, Users, UserCircle, BarChart3, ShoppingBag, FileText, Shield, ClipboardList, HardDrive, Settings, CalendarClock, UtensilsCrossed } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -17,7 +17,8 @@ const nav = [
   { to: '/achats',      icon: ShoppingBag,     label: 'Achats',            roles: ADMIN },
   { to: '/inventaire',  icon: ClipboardList,   label: 'Inventaire',        roles: ADMIN },
   { to: '/location',    icon: CalendarClock,   label: 'Événementiel',      roles: ADMIN },
-  { to: '/clients',     icon: Users,           label: 'Clients',           roles: ADMIN },
+  { to: '/restauration',icon: UtensilsCrossed, label: 'Restauration',      roles: ['admin','super_admin','gestionnaire','caissier'] },
+  { to: '/clients',     icon: Users,          label: 'Clients',           roles: ADMIN },
   { to: '/fournisseurs',icon: TruckIcon,       label: 'Fournisseurs',      roles: ADMIN },
   { to: '/rapports',    icon: BarChart3,       label: 'Rapports',          roles: ADMIN },
   { to: '/utilisateurs',icon: UserCircle,      label: 'Utilisateurs',      roles: ADMIN },
@@ -46,6 +47,7 @@ export default function Sidebar({ licenceDaysLeft, licenceExpired, licenceType, 
     '/facturation': on('feat_module_facturation'),
     '/inventaire':  on('feat_module_inventaires'),
     '/location':    on('feat_module_location'),
+    '/restauration': societe.feat_module_restauration === 1, // désactivé par défaut : il faut l'activer explicitement
     '/clients':     on('feat_module_clients'),
     '/rapports':    on('feat_rapports'),
     '/sauvegarde':  on('feat_module_sauvegarde'),

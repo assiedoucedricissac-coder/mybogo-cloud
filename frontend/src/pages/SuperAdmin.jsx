@@ -65,6 +65,7 @@ export default function SuperAdmin() {
         feat_module_dgi: entreprise.feat_module_dgi,
         feat_module_sauvegarde: entreprise.feat_module_sauvegarde,
         feat_module_location: entreprise.feat_module_location,
+        feat_module_restauration: entreprise.feat_module_restauration,
       });
       toast.success('Fonctionnalités mises à jour');
     } catch (err) { toast.error(err.response?.data?.message || 'Erreur'); }
@@ -413,6 +414,7 @@ export default function SuperAdmin() {
                 ['feat_module_clients',     '👥 Clients & Créances',        'Fiche client, suivi des crédits et paiements clients'],
                 ['feat_module_inventaires', '📋 Inventaires physiques',     'Comptage physique du stock, ajustements, rapports d\'inventaire'],
                 ['feat_module_location',   '🎪 Événementiel / Location',   'Gestion de la location de matériel événementiel (chaises, vaisselle, bâches...)'],
+                ['feat_module_restauration','🍽️ Restauration',              'Carte, tables, commandes sur place / à emporter / livraison, cuisine et encaissement'],
                 ['feat_rapports',           '📊 Rapports & Statistiques',   'Rapports de ventes, marge, remises, mouvements de stock'],
                 ['feat_module_dgi',         '🏛️ DGI / Facturation normalisée','Soumission électronique aux impôts (Côte d\'Ivoire)'],
                 ['feat_module_sauvegarde',  '💾 Sauvegarde & Restauration', 'Téléchargement et restauration de la base de données'],

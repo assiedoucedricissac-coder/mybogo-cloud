@@ -21,6 +21,7 @@ import Sauvegarde from './pages/Sauvegarde';
 import Parametres from './pages/Parametres';
 import AdminPanel from './pages/AdminPanel';
 import Location from './pages/Location';
+import Restauration from './pages/Restauration';
 import LandingPage from './pages/LandingPage';
 import Subscribe from './pages/Subscribe';
 import SubscribePending from './pages/SubscribePending';
@@ -81,7 +82,8 @@ function AppRoutes() {
         <Route path="rapports"     element={<PrivateRoute roles={['admin','super_admin']}><Rapports /></PrivateRoute>} />
         <Route path="inventaire"   element={<PrivateRoute roles={['admin','super_admin']}><Inventaire /></PrivateRoute>} />
         <Route path="location"     element={<PrivateRoute roles={['admin','super_admin']}><Location /></PrivateRoute>} />
-        <Route path="utilisateurs" element={<PrivateRoute roles={['admin','super_admin']}><Utilisateurs /></PrivateRoute>} />
+        <Route path="restauration" element={<PrivateRoute roles={['admin','super_admin','gestionnaire','caissier']}><Restauration /></PrivateRoute>} />
+        <Route path="utilisateurs"element={<PrivateRoute roles={['admin','super_admin']}><Utilisateurs /></PrivateRoute>} />
         <Route path="super-admin" element={<PrivateRoute roles={['super_admin']}><SuperAdmin /></PrivateRoute>} />
         <Route path="sauvegarde" element={<PrivateRoute roles={['admin','super_admin']}><Sauvegarde /></PrivateRoute>} />
         <Route path="parametres" element={<PrivateRoute roles={['admin','super_admin']}><Parametres /></PrivateRoute>} />
