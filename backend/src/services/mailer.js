@@ -21,9 +21,13 @@ function expediteur() {
     || (process.env.RESEND_API_KEY ? 'MYBOGO-STOCK <onboarding@resend.dev>' : process.env.SMTP_USER);
 }
 
+// Accepte "Nom <a@b.com>", "a@b.com", avec ou sans guillemets autour de la valeur.
 function decouperExpediteur(from) {
-  const m = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(from || '');
-  return m ? { name: m[1].trim() || 'MYBOGO-STOCK', email: m[2].trim() } : { name: 'MYBOGO-STOCK', email: String(from || '').trim() };
+  const brut = String(from || '').trim().replace(/^["']+|["']+$/g, '');
+  const m = /([^\s<>"',;]+@[^\s<>"',;]+\.[^\s<>"',;]+)/.exec(brut);
+  if (!m) throw new Error(`MAIL_FROM invalide (valeur lue : « ${brut || 'vide'} »). Format attendu : MYBOGO-STOCK <adresse@exemple.com>`);
+  const nom = brut.split('<')[0].replace(/["']/g, '').trim();
+  return { name: nom && !nom.includes('@') ? nom : 'MYBOGO-STOCK', email: m[1] };
 }
 
 let transport = null;
@@ -62,7 +66,7 @@ async function envoyer({ to, subject, text, html }) {
         ...(html ? { htmlContent: html } : {}),
       }),
     });
-    if (!r.ok) throw new Error(`Brevo ${r.status} : ${(await r.text()).slice(0, 300)}`);
+    if (!r.ok) throw new Error(`Brevo ${r.status} : ${(await r.text()).slice(0, 300)} (expéditeur utilisé : ${expediteur() || 'aucun'})`);
     return;
   }
   await getTransport().sendMail({ from: expediteur(), to, subject, text, ...(html ? { html } : {}) });
