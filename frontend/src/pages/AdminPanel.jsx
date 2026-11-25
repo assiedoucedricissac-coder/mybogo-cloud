@@ -262,7 +262,38 @@ function OngletComptes({ slug, notifier }) {
   return <div style={{ display: 'grid', gap: 10 }}>{liste.map(u => <LigneUtilisateur key={u.id} slug={slug} u={u} notifier={notifier} recharger={charger} />)}</div>;
 }
 
-function FicheBoutique({ b, onRetour, onAction, onDate, onAcceder, notifier }) {
+function ZoneSuppression({ b, onSupprimer }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [saisie, setSaisie] = useState('');
+  const [busy, setBusy] = useState(false);
+  return (
+    <div style={{ ...S.card, marginTop: 18, border: '1px solid #7f1d1d' }}>
+      <h3 style={{ margin: '0 0 6px', fontSize: 15, color: '#fca5a5' }}>Zone dangereuse</h3>
+      {!ouvert ? (
+        <>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '0 0 10px' }}>Supprime la boutique, toutes ses données et ses comptes. Action irréversible.</p>
+          <button style={S.btnRouge} onClick={() => setOuvert(true)}>Supprimer cette boutique</button>
+        </>
+      ) : (
+        <>
+          <p style={{ fontSize: 13, color: '#fca5a5', margin: '0 0 10px' }}>
+            Tapez le code <strong style={{ fontFamily: 'monospace' }}>{b.slug}</strong> pour confirmer la suppression définitive de « {b.nom} » : produits, ventes, clients et comptes seront perdus.
+          </p>
+          <input style={S.input} value={saisie} onChange={e => setSaisie(e.target.value)} placeholder={b.slug} />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button style={S.btnRouge} disabled={busy || saisie.trim() !== b.slug}
+              onClick={async () => { setBusy(true); const ok = await onSupprimer(b.slug, saisie.trim()); if (!ok) setBusy(false); }}>
+              {busy ? 'Suppression…' : 'Supprimer définitivement'}
+            </button>
+            <button style={S.btnGris} onClick={() => { setOuvert(false); setSaisie(''); }}>Annuler</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function FicheBoutique({ b, onRetour, onAction, onDate, onAcceder, onSupprimer, notifier }) {
   const [tab, setTab] = useState('licence');
   const lic = licenceTexte(b);
   const tabs = [['licence', 'Licence'], ['comptes', 'Comptes']];
@@ -302,6 +333,7 @@ function FicheBoutique({ b, onRetour, onAction, onDate, onAcceder, notifier }) {
         {tabs.map(([k, l]) => <button key={k} style={tab === k ? S.btn : S.btnGris} onClick={() => setTab(k)}>{l}</button>)}
       </div>
       {tab === 'licence' ? <OngletLicence b={b} onAction={onAction} onDate={onDate} /> : <OngletComptes slug={b.slug} notifier={notifier} />}
+      <ZoneSuppression b={b} onSupprimer={onSupprimer} />
     </div>
   );
 }
@@ -366,6 +398,19 @@ export default function AdminPanel() {
       return true;
     } catch (e) {
       afficher(e.response?.data?.message || 'Action impossible.', true);
+      return false;
+    }
+  }
+
+  async function supprimer(slug, confirmation) {
+    try {
+      await adminApi.post(`/boutiques/${encodeURIComponent(slug)}/supprimer`, { confirmation });
+      afficher('Boutique supprimée.');
+      setOuverte(null);
+      await charger();
+      return true;
+    } catch (e) {
+      afficher(e.response?.data?.message || 'Suppression impossible.', true);
       return false;
     }
   }
@@ -462,7 +507,7 @@ export default function AdminPanel() {
         )}
 
         {fiche ? (
-          <FicheBoutique b={fiche} onRetour={() => setOuverte(null)} onAction={action} onDate={definirDate} onAcceder={acceder} notifier={afficher} />
+          <FicheBoutique b={fiche} onRetour={() => setOuverte(null)} onAction={action} onDate={definirDate} onAcceder={acceder} onSupprimer={supprimer} notifier={afficher} />
         ) : (
           <>
             {st && (

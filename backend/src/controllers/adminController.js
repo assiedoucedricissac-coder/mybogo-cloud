@@ -2,7 +2,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const tenantRegistry = require('../services/tenantRegistry');
 const { provisionnerBoutique } = require('../services/provisionnement');
-const { mainDb, tenantDbWrapped } = require('../config/database');
+const fs = require('fs');
+const path = require('path');
+const { mainDb, tenantDbWrapped, fermerConnexionTenant } = require('../config/database');
+const { tenantsDir } = require('../services/provisionnement');
 
 // Un seul "compte" — vous, le revendeur — protégé par un mot de passe défini en variable
 // d'environnement Railway (ADMIN_PASSWORD), séparé de tout compte utilisateur d'une boutique.
@@ -202,10 +205,40 @@ function acceder(req, res) {
   res.json({ token, user, boutique: b.tenant.slug });
 }
 
+// Suppression définitive : base de données, entrée du registre, paiements non aboutis.
+// Les paiements aboutis (abonnements actifs) sont conservés comme historique comptable.
+function supprimerBoutique(req, res) {
+  const t = tenantRegistry.lister().find(x => x.slug === req.params.slug);
+  if (!t) return res.status(404).json({ message: 'Boutique introuvable.' });
+  if (req.body.confirmation !== t.slug) return res.status(400).json({ message: 'Confirmation incorrecte : retapez le code de la boutique.' });
+
+  const racine = path.resolve(tenantsDir());
+  const fichier = path.resolve(t.dbPath);
+  const dansLeDossier = fichier.startsWith(racine + path.sep);
+
+  try {
+    fermerConnexionTenant(t.slug);
+    if (dansLeDossier) {
+      for (const suffixe of ['', '-wal', '-shm', '-journal', '.lock']) {
+        fs.rmSync(fichier + suffixe, { recursive: true, force: true });
+      }
+    } else {
+      console.warn(`[ADMIN] Base hors du dossier des boutiques, fichier conservé : ${fichier}`);
+    }
+    tenantRegistry.supprimer(t.slug);
+    mainDb.prepare("DELETE FROM abonnements WHERE slug = ? AND statut != 'actif'").run(t.slug);
+    console.log(`[ADMIN] Boutique supprimée : ${t.slug}`);
+    res.json({ slug: t.slug, supprimee: true });
+  } catch (err) {
+    console.error('[ADMIN] Suppression échouée :', err.message);
+    res.status(500).json({ message: `Suppression échouée : ${err.message}` });
+  }
+}
+
 async function testerEmail(req, res) {
   const { email } = req.body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, message: 'Adresse e-mail invalide.' });
   res.json(await require('../services/mailer').tester(email));
 }
 
-module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail, utilisateurs, basculerUtilisateur, motDePasseUtilisateur, definirExpiration, acceder };
+module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail, utilisateurs, basculerUtilisateur, motDePasseUtilisateur, definirExpiration, acceder, supprimerBoutique };

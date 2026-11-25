@@ -1038,4 +1038,4 @@ function currentTenantSlug() {
   return store && store.slug ? store.slug : null;
 }
 
-module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase, tenantDbWrapped, currentTenantSlug };
+module.exports = { db, mainDb, initDatabase, runInTenantContext, getTenantDb, provisionnerNouvelleBase, tenantDbWrapped, currentTenantSlug, fermerConnexionTenant };

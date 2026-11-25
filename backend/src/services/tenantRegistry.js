@@ -34,6 +34,10 @@ function ajouter(tenant) {
   ecrire(liste);
 }
 
+function supprimer(slug) {
+  ecrire(lire().filter(t => t.slug !== slug));
+}
+
 // slug -> chemin du fichier .db, pour le middleware de résolution de tenant.
 function tenantsMap() {
   const map = {};
@@ -41,4 +45,4 @@ function tenantsMap() {
   return map;
 }
 
-module.exports = { lister, ajouter, tenantsMap, REGISTRY_PATH };
+module.exports = { lister, ajouter, supprimer, tenantsMap, REGISTRY_PATH };
