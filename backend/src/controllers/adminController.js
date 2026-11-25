@@ -246,10 +246,14 @@ function supprimerBoutique(req, res) {
   }
 }
 
+function diagnosticStockage(req, res) {
+  res.json(require('../services/stockage').diagnostic());
+}
+
 async function testerEmail(req, res) {
   const { email } = req.body;
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, message: 'Adresse e-mail invalide.' });
   res.json(await require('../services/mailer').tester(email));
 }
 
-module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail, utilisateurs, basculerUtilisateur, motDePasseUtilisateur, definirExpiration, acceder, supprimerBoutique };
+module.exports = { login, lister, creer, prolonger, suspendre, reactiver, reinitialiserMotDePasse, testerEmail, utilisateurs, basculerUtilisateur, motDePasseUtilisateur, definirExpiration, acceder, supprimerBoutique, diagnosticStockage };

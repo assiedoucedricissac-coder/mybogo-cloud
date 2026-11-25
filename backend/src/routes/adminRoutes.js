@@ -15,6 +15,7 @@ router.post('/boutiques/:slug/utilisateurs/:id/mot-de-passe', adminAuth, adminCo
 router.post('/boutiques/:slug/expiration', adminAuth, adminController.definirExpiration);
 router.post('/boutiques/:slug/acceder', adminAuth, adminController.acceder);
 router.post('/boutiques/:slug/supprimer', adminAuth, adminController.supprimerBoutique);
+router.get('/diagnostic', adminAuth, adminController.diagnosticStockage);
 router.post('/test-email', adminAuth, adminController.testerEmail);
 router.post('/boutiques/:slug/mot-de-passe', adminAuth, adminController.reinitialiserMotDePasse);
 

@@ -352,6 +352,7 @@ export default function AdminPanel() {
   const [creation, setCreation] = useState(false);
   const [dernierResultat, setDernierResultat] = useState(null);
   const [testMail, setTestMail] = useState({ email: '', busy: false, resultat: null });
+  const [stockage, setStockage] = useState(null);
 
   useEffect(() => { if (token) charger(); }, [token]);
 
@@ -364,6 +365,7 @@ export default function AdminPanel() {
     try {
       const r = await adminApi.get('/boutiques');
       setData(r.data);
+      adminApi.get('/diagnostic').then(d => setStockage(d.data)).catch(() => {});
     } catch (e) {
       if (e.response?.status === 401 || e.response?.status === 403) deconnexion();
       else afficher('Chargement impossible.', true);
@@ -504,6 +506,19 @@ export default function AdminPanel() {
 
         {notice && (
           <div style={{ background: notice.erreur ? '#7f1d1d' : '#14532d', borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 14 }}>{notice.texte}</div>
+        )}
+
+        {stockage && (stockage.persistant === false || (stockage.persistant === null && !stockage.variableDefinie)) && (
+          <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 10, padding: '14px 16px', marginBottom: 14, fontSize: 14, lineHeight: 1.5 }}>
+            <strong>⚠️ Stockage non permanent : vos boutiques seront effacées à chaque mise à jour.</strong>
+            <div style={{ marginTop: 6 }}>
+              Dans Railway, service mybogo-cloud : <strong>1)</strong> onglet Volumes, créer un volume monté sur <code>/data</code> ;
+              {' '}<strong>2)</strong> onglet Variables, définir <code>MYBOGO_DB_PATH</code> = <code>/data/mybogo.db</code>.
+            </div>
+            <div style={{ marginTop: 6, fontSize: 12, color: '#fecaca', wordBreak: 'break-all' }}>
+              Dossier utilisé actuellement : {stockage.dossierRegistre} · variable MYBOGO_DB_PATH : {stockage.variableDefinie ? stockage.cheminBasePrincipale : 'non définie'}
+            </div>
+          </div>
         )}
 
         {fiche ? (

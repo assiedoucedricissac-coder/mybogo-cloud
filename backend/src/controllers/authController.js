@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { db } = require('../config/database');
+const { db, currentTenantSlug } = require('../config/database');
 
 function login(req, res) {
   const { email, mot_de_passe } = req.body;
@@ -17,7 +17,7 @@ function login(req, res) {
   db.prepare('INSERT INTO journal_activites (user_id, action, module) VALUES (?, ?, ?)').run(user.id, 'connexion', 'auth');
   const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
   const { mot_de_passe: _, ...userSafe } = user;
-  res.json({ token, user: userSafe });
+  res.json({ token, user: userSafe, boutique: currentTenantSlug() });
 }
 
 function getMe(req, res) {

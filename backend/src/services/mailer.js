@@ -106,9 +106,9 @@ async function envoyerAcces({ email, nomBoutique, slug, finLicence, essai, telep
     ``,
     `POUR VOUS CONNECTER`,
     `  1. Ouvrez ${lien}`,
-    `  2. Saisissez votre code boutique (${slug}), votre email et votre mot de passe.`,
+    `  2. Saisissez votre email et votre mot de passe (le code boutique est facultatif).`,
     ``,
-    `Conservez ce message : le code boutique est nécessaire à chaque connexion.`,
+    `Conservez ce message : le code boutique ${slug} sert à vos employés pour se connecter.`,
     `Besoin d'aide ? Répondez simplement à cet e-mail.`, ``, `L'équipe MYBOGO-STOCK`,
   ].join('\n');
 
@@ -128,10 +128,10 @@ async function envoyerAcces({ email, nomBoutique, slug, finLicence, essai, telep
   <p style="margin:18px 0 6px;font-weight:700">Pour vous connecter</p>
   <ol style="margin:0 0 18px;padding-left:20px;line-height:1.7">
     <li>Ouvrez le lien ci-dessous</li>
-    <li>Saisissez votre code boutique <strong>${esc(slug)}</strong>, votre email et votre mot de passe</li>
+    <li>Saisissez votre email et votre mot de passe (le code boutique est facultatif)</li>
   </ol>
   <p style="margin:0 0 22px"><a href="${esc(lien)}" style="background:#2563eb;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600;display:inline-block">Me connecter</a></p>
-  <p style="font-size:13px;color:#6b7280">Conservez ce message : le code boutique est nécessaire à chaque connexion.<br>Besoin d'aide ? Répondez simplement à cet e-mail.</p>
+  <p style="font-size:13px;color:#6b7280">Conservez ce message : le code boutique <strong>${esc(slug)}</strong> sert à vos employés pour se connecter.<br>Besoin d'aide ? Répondez simplement à cet e-mail.</p>
 </div>`;
 
   try {

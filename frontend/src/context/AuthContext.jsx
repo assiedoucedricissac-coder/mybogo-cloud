@@ -27,9 +27,11 @@ export function AuthProvider({ children }) {
     const res = await api.post('/auth/login', { email, mot_de_passe }, { headers });
     localStorage.setItem('token', res.data.token);
     localStorage.setItem('user', JSON.stringify(res.data.user));
-    if (boutiqueCode) {
-      localStorage.setItem('boutique', boutiqueCode.trim().toLowerCase());
-      setBoutique(boutiqueCode.trim().toLowerCase());
+    // Le serveur indique la boutique retrouvée (par l'e-mail) quand aucun code n'a été saisi.
+    const code = (res.data.boutique || boutiqueCode || '').trim().toLowerCase();
+    if (code) {
+      localStorage.setItem('boutique', code);
+      setBoutique(code);
     } else {
       localStorage.removeItem('boutique');
       setBoutique('');

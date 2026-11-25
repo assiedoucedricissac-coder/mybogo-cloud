@@ -20,7 +20,7 @@ if (!process.env.JWT_EXPIRES_IN) process.env.JWT_EXPIRES_IN = '7d';
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initDatabase, runInTenantContext } = require('./src/config/database');
+const { initDatabase, runInTenantContext, currentTenantSlug } = require('./src/config/database');
 const tenantRegistry = require('./src/services/tenantRegistry');
 
 const app = express();
@@ -74,6 +74,15 @@ app.use(cors({ origin: '*', credentials: true }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Connexion sans code boutique : on retrouve la boutique du gérant par son e-mail.
+app.post('/api/auth/login', (req, res, next) => {
+  if (currentTenantSlug()) return next();
+  const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+  const tenant = email && tenantRegistry.lister().find(t => (t.email || '').toLowerCase() === email);
+  if (!tenant) return next();
+  runInTenantContext(tenant.slug, tenant.dbPath, next);
+});
+
 // Servir les images uploadées
 const uploadsDir = process.env.MYBOGO_UPLOADS_PATH || path.join(__dirname, 'uploads');
 app.use('/uploads', express.static(uploadsDir));
@@ -122,6 +131,11 @@ function startServer() {
     try {
       initDatabase();
       require('./src/services/comptesParDefaut').securiserComptesParDefaut();
+      const stockage = require('./src/services/stockage').diagnostic();
+      console.log(`[STOCKAGE] registre=${stockage.dossierRegistre} persistant=${stockage.persistant} montage=${JSON.stringify(stockage.montage)} boutiques=${stockage.nbBoutiques}`);
+      if (process.env.NODE_ENV === 'production' && stockage.persistant === false) {
+        console.error('[STOCKAGE] ATTENTION : stockage NON persistant — les boutiques seront effacées au prochain déploiement. Ajoutez un volume Railway monté sur /data et la variable MYBOGO_DB_PATH=/data/mybogo.db.');
+      }
       const server = app.listen(PORT, () => {
         console.log('SERVER_READY:' + PORT);
         console.log(`Serveur MYBOGO-STOCK demarre sur http://localhost:${PORT}`);

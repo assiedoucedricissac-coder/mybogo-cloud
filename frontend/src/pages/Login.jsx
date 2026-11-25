@@ -117,19 +117,6 @@ export default function Login() {
           <p className="text-gray-400 text-sm mb-6">Connectez-vous à votre espace</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Code boutique — SAAS multi-tenant */}
-            <div>
-              <label className="label flex items-center gap-1.5"><Store size={13} className="text-gray-400"/> Code boutique</label>
-              <input
-                type="text"
-                autoCapitalize="none" autoCorrect="off" spellCheck={false}
-                className="input"
-                placeholder="ex: eljireh  (laisser vide si non-applicable)"
-                value={form.boutique}
-                onChange={e => setForm(p => ({ ...p, boutique: e.target.value.toLowerCase().trim() }))}
-                onBlur={e => fetchSociete(e.target.value.trim())}
-              />
-            </div>
             <div>
               <label className="label">Email</label>
               <input
@@ -159,6 +146,22 @@ export default function Login() {
                   {showPwd ? <EyeOff size={16}/> : <Eye size={16}/>}
                 </button>
               </div>
+            </div>
+            {/* Code boutique — facultatif : le gérant est retrouvé automatiquement par son e-mail */}
+            <div className="opacity-70">
+              <label className="label flex items-center gap-1.5 text-gray-500">
+                <Store size={13} className="text-gray-400"/> Code boutique <span className="font-normal text-gray-400">(facultatif)</span>
+              </label>
+              <input
+                type="text"
+                autoCapitalize="none" autoCorrect="off" spellCheck={false}
+                className="input bg-gray-50 text-gray-500"
+                placeholder="Détecté automatiquement"
+                value={form.boutique}
+                onChange={e => setForm(p => ({ ...p, boutique: e.target.value.toLowerCase().trim() }))}
+                onBlur={e => fetchSociete(e.target.value.trim())}
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Utile seulement pour les employés ajoutés par le gérant.</p>
             </div>
             <button type="submit" disabled={loading}
               className="w-full flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl transition-all duration-200 shadow-lg disabled:opacity-60"

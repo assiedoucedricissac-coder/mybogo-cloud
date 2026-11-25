@@ -122,7 +122,7 @@ export default function Subscribe() {
           <p className="text-xs text-gray-500 mb-5">
             {essaiOk.emailEnvoye
               ? `Ces accès vous ont aussi été envoyés par e-mail à ${essaiOk.email} (pensez à vérifier vos courriers indésirables).`
-              : "Notez bien votre code boutique : il est nécessaire à chaque connexion."}
+              : "Connectez-vous avec votre e-mail et votre mot de passe. Le code boutique sert à vos employés."}
           </p>
           <button onClick={() => navigate('/login')}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors shadow">
