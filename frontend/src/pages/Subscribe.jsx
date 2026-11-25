@@ -170,7 +170,7 @@ export default function Subscribe() {
               </div>
               <div>
                 <label className="label flex items-center gap-1.5"><Mail size={13} className="text-gray-400" /> Email *</label>
-                <input className="input" type="email" placeholder="votre@email.com" value={essai.email}
+                <input className="input" type="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="votre@email.com" value={essai.email}
                   onChange={e => setEssai(f => ({ ...f, email: e.target.value }))} required />
               </div>
               <div>

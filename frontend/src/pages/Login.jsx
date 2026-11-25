@@ -122,6 +122,7 @@ export default function Login() {
               <label className="label flex items-center gap-1.5"><Store size={13} className="text-gray-400"/> Code boutique</label>
               <input
                 type="text"
+                autoCapitalize="none" autoCorrect="off" spellCheck={false}
                 className="input"
                 placeholder="ex: eljireh  (laisser vide si non-applicable)"
                 value={form.boutique}
@@ -133,10 +134,11 @@ export default function Login() {
               <label className="label">Email</label>
               <input
                 type="email"
+                autoCapitalize="none" autoCorrect="off" spellCheck={false}
                 className="input"
                 placeholder="votre@email.com"
                 value={form.email}
-                onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                onChange={e => setForm(p => ({ ...p, email: e.target.value.trim() }))}
                 required autoFocus
               />
             </div>

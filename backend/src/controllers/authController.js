@@ -7,7 +7,9 @@ function login(req, res) {
   if (!email || !mot_de_passe) {
     return res.status(400).json({ message: 'Email et mot de passe requis' });
   }
-  const user = db.prepare('SELECT * FROM users WHERE email = ? AND actif = 1').get(email);
+  // Insensible à la casse et aux espaces : les claviers de téléphone ajoutent souvent une majuscule.
+  const emailNorm = String(email).trim().toLowerCase();
+  const user = db.prepare('SELECT * FROM users WHERE lower(email) = ? AND actif = 1').get(emailNorm);
   if (!user || !bcrypt.compareSync(mot_de_passe, user.mot_de_passe)) {
     return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
   }
