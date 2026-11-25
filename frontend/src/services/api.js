@@ -21,6 +21,9 @@ api.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    if (err.response?.status === 402 && err.response?.data?.code === 'LICENCE_EXPIREE') {
+      window.dispatchEvent(new Event('licence-expiree'));
+    }
     return Promise.reject(err);
   }
 );

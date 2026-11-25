@@ -20,6 +20,9 @@ export default function Layout() {
 
   useEffect(() => {
     api.get('/licence/status').then(r => setLicence(r.data)).catch(() => {});
+    const bloquer = () => setLicence(l => ({ ...(l || {}), expired: true }));
+    window.addEventListener('licence-expiree', bloquer);
+    return () => window.removeEventListener('licence-expiree', bloquer);
   }, []);
 
   async function handleActivate(e) {

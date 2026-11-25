@@ -89,7 +89,8 @@ Layer.prototype.handle_request = function(req, res, next) {
   } catch (err) { next(err); }
 };
 
-// Routes API
+// Routes API (licence expirée ou suspendue : bloquée côté serveur, hors connexion/paiement)
+app.use('/api', require('./src/middleware/licenceGuard'));
 app.use('/api', require('./src/routes/index'));
 
 // Panneau d'administration (création/gestion des boutiques) — indépendant de toute boutique
