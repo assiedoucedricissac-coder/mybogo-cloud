@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const tenantRegistry = require('../services/tenantRegistry');
 const { provisionnerBoutique } = require('../services/provisionnement');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { mainDb, tenantDbWrapped, fermerConnexionTenant } = require('../config/database');
@@ -195,12 +196,22 @@ function definirExpiration(req, res) {
   res.json({ slug: b.tenant.slug, expiresAt: date });
 }
 
-// Ouvre la boutique en tant que son administrateur (comme « Accéder » dans Ecole Manager).
+// Ouvre la boutique en tant que super admin (module « Super Admin » : fonctionnalités,
+// entreprise, comptes). Le compte super admin de la boutique n'a pas de mot de passe connu :
+// il est ré-aléatoirisé à chaque accès, donc on n'y entre que par ce panneau.
 function acceder(req, res) {
   const b = trouverBoutique(req.params.slug);
   if (!b) return res.status(404).json({ message: 'Boutique introuvable.' });
-  const user = b.db.prepare("SELECT id, nom, prenom, email, role, actif FROM users WHERE email = ? AND role = 'admin'").get(b.tenant.email);
-  if (!user) return res.status(404).json({ message: "Compte administrateur introuvable dans cette boutique." });
+  const hash = bcrypt.hashSync(crypto.randomBytes(24).toString('hex'), 10);
+  const lire = () => b.db.prepare("SELECT id, nom, prenom, email, role, actif FROM users WHERE role = 'super_admin' ORDER BY id LIMIT 1").get();
+  let user = lire();
+  if (user) {
+    b.db.prepare('UPDATE users SET actif = 1, mot_de_passe = ? WHERE id = ?').run(hash, user.id);
+  } else {
+    b.db.prepare('INSERT INTO users (nom, prenom, email, mot_de_passe, role) VALUES (?, ?, ?, ?, ?)')
+      .run('MYBOGO', 'SuperAdmin', 'superadmin@mybogo.ci', hash, 'super_admin');
+  }
+  user = lire();
   const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '2h' });
   res.json({ token, user, boutique: b.tenant.slug });
 }
